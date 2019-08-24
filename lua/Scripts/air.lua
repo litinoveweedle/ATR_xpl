@@ -46,9 +46,9 @@ function bleed(ind)
 		temp_bleed = 1
 	end
 		
-	if eng_bleed[ind] == 0 and eng_n2[ind] > 40 then
+	if eng_bleed_val[ind] == 0 and eng_n2[ind] > 40 then
 		temp_bleed = 1
-	elseif eng_bleed[ind] == 1 and eng_n2[ind] > 35 then
+	elseif eng_bleed_val[ind] == 1 and eng_n2[ind] > 35 then
 		temp_bleed = 0
 	end
 
@@ -76,11 +76,11 @@ function air()
 	bleed(1)
 	
 	-- open crossfeed as it is needed for wing antice, but shut corresponding pack
-	if eng_bleed[0] == 1 and eng_bleed[1] == 0 and duct_press_center == 1 and duct_press_left == 1 then
+	if eng_bleed_val[0] == 1 and eng_bleed_val[1] == 0 and duct_press_center == 1 and duct_press_left == 1 then
 		pack_right[0] = 0
 		duct_left_val[0] = 1
 		duct_right_val[0] = 1
-	elseif eng_bleed[0] == 0 and eng_bleed[1] == 1 and duct_press_center == 1 and duct_press_right == 1 then
+	elseif eng_bleed_val[0] == 0 and eng_bleed_val[1] == 1 and duct_press_center == 1 and duct_press_right == 1 then
 		pack_left[0] = 0
 		duct_left_val[0] = 1
 		duct_right_val[0] = 1
