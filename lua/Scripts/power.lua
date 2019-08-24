@@ -134,6 +134,9 @@ eng_torque_act = dataref_table("sim/cockpit2/engine/indicators/torque_n_mtr")
 -- engine ITT
 eng_itt = dataref_table("sim/flightmodel2/engines/ITT_deg_C")
 
+-- engine bleed air
+eng_bleed_val = dataref_table("sim/cockpit2/bleedair/actuators/engine_bleed_sov")
+
 -- hotel mode prop brake stop ratio
 hotel_mode = dataref_table("sim/cockpit2/switches/hotel_mode")
 hotel_mode_ratio = dataref_table("sim/cockpit2/switches/hotel_mode_ratio")
@@ -254,7 +257,7 @@ function eec(ind)
 		--idle gate limit
 		pla = 37
 	end
-	
+
 	--PEC status
 	if pec_cmd[ind] == 1 then
 		--todo FAILURES
@@ -264,7 +267,7 @@ function eec(ind)
 		prop_pec[ind] = 0
 		pec_ind[ind] = 1
 	end
-	
+
 	--EEC status
 	if eec_cmd[ind] == 1 then
 		--todo FAILURES
@@ -291,21 +294,15 @@ function eec(ind)
 			temp_eng_mix = 0.5
 			temp_eng_throttle = -1
 		end
-		
-		--EEC
-		if eng_eec[ind] == 1 then
-			--EEC on
-		else
-			--EEC off
-			--reset EEC fix (as bellow 52 PLA)
-			eng_eec[ind] = 0
-		end
+
+		--reset EEC frozen (as bellow 52 PLA)
+		eng_throttle_last[ind] = 0
 	elseif pla < 37 then
 		-- beta range
 		temp_prop_speed = prop_speed_max * 0.708
 		temp_prop_mode = 2
 		temp_eng_throttle = -1.0 - ( ( -1.0 / 24 ) * ( pla - 13 ) )
-		
+
 		--EEC
 		if eng_eec[ind] == 1 then
 			--EEC on
@@ -318,9 +315,10 @@ function eec(ind)
 		else
 			--EEC off
 			temp_eng_mix = 0.5 + ( ( 0.5 / 24 ) * ( pla - 13 ) )
-			--reset EEC fix (as bellow 52 PLA)
-			eng_eec[ind] = 0
 		end
+
+		--reset EEC frozen (as bellow 52 PLA)
+		eng_throttle_last[ind] = 0
 	else
 		-- alpha range
 		temp_prop_mode = 1
@@ -347,7 +345,7 @@ function eec(ind)
 			--PEC off
 			temp_prop_speed = prop_speed_last[ind]
 		end
-		
+
 		--EEC
 		if eng_eec[ind] == 1 then
 			--EEC on / HMU top law
@@ -370,11 +368,11 @@ function eec(ind)
 				-- CRZ
 				power_curve = power_pla["CRZ"]
 			end
-	
+
 			-- get commanded engine power
 			local eng_power_ratio = 0
 			for i = 1, #power_curve, 2 do
-				if pla == power_curve[i] then	
+				if pla == power_curve[i] then
 					eng_power_ratio = power_curve[i+1]
 					break
 				elseif pla < power_curve[i] then
@@ -382,9 +380,7 @@ function eec(ind)
 					break
 				end
 			end
-			-- limit max power by ITT based on OAT and air density/pressure
-			-- TODO lookup in power tables and/or provide sensible calculation???
-	
+
 			-- PID to set engine throttle to produce FADEC commanded power
 			throttle_pid[ind]["cv"] = eng_throttle[ind]
 			throttle_pid[ind]["pv"] = eng_power_act[ind]
@@ -392,20 +388,25 @@ function eec(ind)
 			throttle_pid[ind]["ff"] = eng_power_ratio / 1.15
 			pid.run(throttle_pid[ind])
 			temp_eng_throttle = throttle_pid[ind]["cv"]
-			
+
 			--keep last value for EEC off
-			eng_throttle_last = temp_eng_throttle
-			
+			if pla <= 52 then
+				--reset EEC frozen (as bellow 52 PLA)
+				eng_throttle_last[ind] = 0
+			else
+				eng_throttle_last[ind] = temp_eng_throttle
+			end
+
 			-- FDAU bug
 			if pwr_mgmt[ind] == 0 and eng_atpcs ~= 0 and pla > 66 and pla < 68 then
 				-- TO reserved power
 				power_curve = power_pla["RTO"]
 			end
-			
+
 			-- get PLA notch engine power
 			local eng_power_ratio = 0
 			for i = 1, #power_curve, 2 do
-				if pla == power_curve[i] then	
+				if pla == power_curve[i] then
 					eng_power_ratio = power_curve[i+1]
 					break
 				elseif pla < power_curve[i] then
@@ -415,7 +416,12 @@ function eec(ind)
 			end
 			-- limit max power by ITT based on OAT and air density/pressure
 			-- TODO lookup in power tables and/or provide sensible calculation???
-			
+			if eng_bleed_val[ind] == 1 then
+
+			else
+
+			end
+
 			--calculate maximum notch torque from power and prop speed for given mode
 			if pwr_mgmt[ind] == 0 or pwr_mgmt[ind] == 1 then
 				-- TO and MCT
@@ -425,18 +431,13 @@ function eec(ind)
 				eec_fdau[ind] = eng_power_ratio / 0.82
 			end
 		else
-			if pla <= 52 then
-				--reset EEC frozen (as bellow 52 PLA)
-				eng_eec[ind] = 0
-			end
-		
-			if eng_eec[ind] == 0 then
+			if eng_throttle_last[ind] == 0 then
 				--EEC off / HMU base law
 				power_curve = base_pla
 				-- get commanded engine throttle
 				local eng_power_ratio = 0
 				for i = 1, #power_curve, 2 do
-					if pla == power_curve[i] then	
+					if pla == power_curve[i] then
 						temp_eng_throttle = power_curve[i+1]
 						break
 					elseif pla < power_curve[i] then
@@ -446,7 +447,11 @@ function eec(ind)
 				end
 			else
 				--EEC frozen
-				temp_eng_throttle = eng_throttle_last
+				temp_eng_throttle = eng_throttle_last[ind]
+				if pla <= 52 then
+					--reset EEC frozen (as bellow 52 PLA)
+					eng_throttle_last[ind] = 0
+				end
 			end
 		end
 		-- to fix 11.35 reverse runaway bug which shall be fixed in 11.40
@@ -482,17 +487,17 @@ function eec(ind)
 	if ind == 1 then
 		pbrake(pla, cla)
 	end
-	
+
 	--low pitch
 	if prop_pitch[ind] < 14 then
 		low_pitch_ind[ind] = 1
 		if on_ground == 0 then
-			
+
 		end
 	else
 		low_pitch_ind[ind] = 1
 	end
-	
+
 	prop_mode[ind] = temp_prop_mode
 	prop_speed_cmd[ind] = temp_prop_speed
 	eng_throttle[ind] = temp_eng_throttle
@@ -708,14 +713,14 @@ function power()
 
 	--atpcs function
 	atpcs()
-	
+
 	--prop synchrophazer function
 	sync()
 
 	--eec functions
 	eec(0)
 	eec(1)
-	
+
 	--itt function
 	itt(0)
 	itt(1)
