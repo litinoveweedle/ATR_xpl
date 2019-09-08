@@ -1,6 +1,11 @@
+-- ATR CCAS simulation
+-- 2019 @litinoveweedle
+
+if PLANE_ICAO ~= "ATR75" then
+	return
+end
 
 
-ccas_ind = create_dataref_table("atr/ccas/anuciators", "IntArray")
-ccas_ind[0] = 0
+---- CODE STARTS ----
 
 

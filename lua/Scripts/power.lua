@@ -1,156 +1,12 @@
 -- ATR PW127 POWER PLANT simulation
 -- 2019 @litinoveweedle
 
----- ATR DATAREFS ----
-
--- power levers
-pl = create_dataref_table("atr/power/pl", "FloatArray")
-pl[0] = 0.131
-pl[1] = 0.131
-
--- condition levers
-cl = create_dataref_table("atr/power/cl", "FloatArray")
-cl[0] = 0.66
-cl[1] = 0.66
-
--- power mgmt knob
-pwr_mgmt = create_dataref_table("atr/power/pwr_mgmt", "IntArray")
-pwr_mgmt[0] = 0
-pwr_mgmt[1] = 0
-
--- EEC switch and indicator
-eec_cmd = create_dataref_table("atr/power/eec_cmd", "IntArray")
-eec_cmd[0] = 1
-eec_cmd[1] = 1
-eec_ind = create_dataref_table("atr/power/eec_ind", "IntArray")
-eec_ind[0] = 0
-eec_ind[1] = 0
-
--- EEC target torque
-eec_fdau = create_dataref_table("atr/power/eec_fdau", "FloatArray")
-eec_fdau[0] = 1
-eec_fdau[1] = 1
-
--- ATPCS button, indicator and test rotaty selector
-atpcs_cmd = create_dataref_table("atr/power/atpcs_cmd", "Int")
-atpcs_cmd[0] = 1
-atpcs_ind = create_dataref_table("atr/power/atpcs_ind", "Int")
-atpcs_ind[0] = 0
-atpcs_test = create_dataref_table("atr/power/atpcs_test", "Int")
-atpcs_test[0] = 0
-
--- uptrim and autofeather indicators
-uptrim_ind = create_dataref_table("atr/power/uptrim_ind", "IntArray")
-uptrim_ind[0] = 0
-uptrim_ind[1] = 0
-
--- gust lock lever
-gust_lock_cmd = create_dataref_table("atr/power/gust_lock_cmd", "Int")
-gust_lock_cmd[0] = 1
-
--- idle gate lever and indicator
-idle_gate_cmd = create_dataref_table("atr/power/idle_gate_cmd", "Int")
-idle_gate_cmd[0] = 0
-idle_gate_ind = create_dataref_table("atr/power/idle_gate_ind", "Int")
-idle_gate_ind[0] = 0
-
--- propeller brake for hotel mode switch
-prop_brake_cmd = create_dataref_table("atr/power/prop_brake_cmd", "Int")
-prop_brake_cmd[0] = 0
--- propeller brake indicators [0] - unlock, [1] - ready, [2] - engaged
-prop_brake_ind = create_dataref_table("atr/power/prop_brake_ind", "IntArray")
-prop_brake_ind[0] = 0
-prop_brake_ind[1] = 0
-prop_brake_ind[2] = 0
-
---low prop pitch indicator
-low_pitch_ind = create_dataref_table("atr/power/low_pitch_ind", "IntArray")
-low_pitch_ind[0] = 0
-low_pitch_ind[1] = 0
-
--- prop synchrophaser
-sync_cmd = create_dataref_table("atr/power/sync_cmd", "Int")
-sync_cmd[0] = 1
-sync_ind = create_dataref_table("atr/power/sync_ind", "Int")
-sync_ind[0] = 0
-
--- PEC switch and indicator
-pec_cmd = create_dataref_table("atr/power/pec_cmd", "IntArray")
-pec_cmd[0] = 1
-pec_cmd[1] = 1
-pec_ind = create_dataref_table("atr/power/pec_ind", "IntArray")
-pec_ind[0] = 0
-pec_ind[1] = 0
-
---corrected ITT
-eng_itt_corr = create_dataref_table("atr/power/eng_itt", "FloatArray")
-eng_itt_corr[0] = 0
-eng_itt_corr[1] = 0
-
----- ATR SHARED DATAREFS ----
-
---CCAS anunicator panel
-ccas_ind = dataref_table("atr/ccas/anuciators")
+if PLANE_ICAO ~= "ATR75" then
+	return
+end
 
 
-
----- XPL DATAREFS ----
-
--- annunciators
-master_warning = dataref_table("sim/cockpit/warnings/annunciators/master_warning")
-master_caution = dataref_table("sim/cockpit/warnings/annunciators/master_caution")
-
-on_ground = dataref_table("sim/flightmodel/failures/onground_all")
-
---commanded/actual prop speed
-prop_speed_cmd = dataref_table("sim/cockpit2/engine/actuators/prop_rotation_speed_rad_sec")
-prop_speed_act = dataref_table("sim/flightmodel2/engines/prop_rotation_speed_rad_sec")
-
---prop mode - 0 is feathered, 1 is normal, 2 is beta, 3 is reverse
-prop_mode = dataref_table("sim/cockpit2/engine/actuators/prop_mode")
-
---actual prop pitch
-prop_pitch = dataref_table("sim/flightmodel2/engines/prop_pitch_deg")
-
---prop feather command
-prop_feather = dataref_table("sim/cockpit2/engine/actuators/manual_feather_prop")
-
---prop sync switch
-prop_sync = dataref_table("sim/cockpit2/switches/prop_sync_on")
-
--- only 0 - shut off, 0.5 - low idle , 1 - high idle
-eng_mixture = dataref_table("sim/cockpit2/engine/actuators/mixture_ratio")
-
--- commanded throttle
-eng_throttle = dataref_table("sim/cockpit2/engine/actuators/throttle_beta_rev_ratio")
-fix_throttle_bug = dataref_table("sim/flightmodel/engine/ENGN_thro_use")
-
--- engine power produced
-eng_power_act = dataref_table("sim/cockpit2/engine/indicators/power_watts")
-
--- engine torque produced
-eng_torque_act = dataref_table("sim/cockpit2/engine/indicators/torque_n_mtr")
-
--- engine ITT
-eng_itt = dataref_table("sim/flightmodel2/engines/ITT_deg_C")
-
--- engine bleed air
-eng_bleed_val = dataref_table("sim/cockpit2/bleedair/actuators/engine_bleed_sov")
-
--- hotel mode prop brake stop ratio
-hotel_mode = dataref_table("sim/cockpit2/switches/hotel_mode")
-hotel_mode_ratio = dataref_table("sim/cockpit2/switches/hotel_mode_ratio")
-
--- hydraulic pressure in blue system
-hydraulic_pressure_blue = dataref_table("sim/cockpit2/hydraulics/indicators/hydraulic_pressure_1")
-
---fuel_gover = dataref_table("sim/cockpit2/engine/actuators/idle_speed_ratio")
---fadec_on = dataref_table("sim/cockpit/engine/fadec_on")
---reverser_ready = dataref_table("sim/cockpit2/annunciators/reverser_not_ready")
---DataRef("engine_critalt", "sim/aircraft/engine/acf_critalt", "writable")
---DataRef("engine_power", "sim/aircraft2/engine/max_power_limited_watts", "writable")
---engine_critalt = dataref_table("sim/aircraft/engine/acf_critalt")
---engine_power = dataref_table("sim/aircraft2/engine/max_power_limited_watts")
+---- CODE STARTS ----
 
 -- nominal propeller speed rad/sec
 local prop_speed_max = 125.6637
@@ -185,10 +41,10 @@ local eng_eec = { ["0"] = 1, ["1"] = 1 }
 local eng_throttle_last = { ["0"] = 0, ["1"] = 0 }
 
 -- gust lock state
---local gust_lock = 1
+local gust_lock = 1
 
 -- idle gate state
---local idle_gate = 0
+local idle_gate = 0
 
 -- propeller brake state 0 - off, 1 - engaging, 2 - engaged, 3 - releasing, -1 - failed
 local prop_brake = 0
@@ -203,36 +59,69 @@ local eng_uptrim = { ["0"] = 0, ["1"] = 0 }
 local eng_autofeather = { ["0"] = 0, ["1"] = 0 }
 local eng_autofeather_timer = 0
 
+
+local prop_beta = { ["reverse"] = -14, ["beta"] = 2, ["alpha"] = 14, ["high"] = 50, ["feather"] = 78.5 }
+
+
 -- PIDs structures
-local mixture_pid = {
-	[0] = { ["kp"] = 0.4, ["ki"] = 0.15, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.4, ["cv_max"] = 1, ["cv_sup"] = 0.2, ["cv_sdw"] = 0.2 },
-	[1] = { ["kp"] = 0.4, ["ki"] = 0.15, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.4, ["cv_max"] = 1, ["cv_sup"] = 0.2, ["cv_sdw"] = 0.2 }
-}
-local throttle_pid = {
-	[0] = { ["kp"] = 0.0000002, ["ki"] = 0.000000125, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2 },
-	[1] = { ["kp"] = 0.0000002, ["ki"] = 0.000000125, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2 }
-	--	[1] = { ["kp"] = 0.0000002, ["ki"] = 0.00000007, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 1, ["cv_up"] = 0.3, ["cv_dw"] = 0.3 }
-}
 
-
+-- controls TQ by throttle at alpha with EEC on
+local eec_power_pid = {
+	[0] = { ["kp"] = 0.0000002, ["ki"] = 0.000000125, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 0 },
+	[1] = { ["kp"] = 0.0000002, ["ki"] = 0.000000125, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 0 }
+}
+-- controls NH by throttle at beta with EEC off
+local hmu_nhspeed_pid = {
+	[0] = { ["kp"] = 0.2, ["ki"] = 0.15, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.4, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 0 },
+	[1] = { ["kp"] = 0.2, ["ki"] = 0.15, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.4, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 0 }
+}
+-- controls NP by pitch at alpha
+local pvm_pitch_pid = {
+	[0] = { ["kp"] = -0.5, ["ki"] = -0.3, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 36, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 },
+	[1] = { ["kp"] = -0.5, ["ki"] = -0.3, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 36, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 }
+}
+-- controls NP by throttle at beta and reverse
+local eec_propspeed_pid = {
+	[0] = { ["kp"] = 0.025, ["ki"] = 0.007, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.05, ["cv_max"] = 0.6, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 1 },
+	[1] = { ["kp"] = 0.025, ["ki"] = 0.007, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.05, ["cv_max"] = 0.6, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 0 }
+}
+-- limits prop pitch speed change
+local prop_pitch_gain = {
+	[0] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = -14, ["out_max"] = 78.5, ["out_up"] = 7, ["out_dw"] = 7, ["log"] = 0 },
+	[1] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = -14, ["out_max"] = 78.5, ["out_up"] = 7, ["out_dw"] = 7, ["log"] = 0 },
+}
+-- limits pla speed change
+local pla_gain = {
+	[0] = { ["k"] = 100, ["ts"] = 0.1, ["out_min"] = 0, ["out_max"] = 100, ["out_up"] = 15, ["out_dw"] = 15, ["log"] = 0 },
+	[1] = { ["k"] = 100, ["ts"] = 0.1, ["out_min"] = 0, ["out_max"] = 100, ["out_up"] = 15, ["out_dw"] = 15, ["log"] = 0 },
+}
+-- limits cla speed change
+local cla_gain = {
+	[0] = { ["k"] = 66, ["ts"] = 0.1, ["out_min"] = 0, ["out_max"] = 66, ["out_up"] = 15, ["out_dw"] = 15, ["log"] = 0 },
+	[1] = { ["k"] = 66, ["ts"] = 0.1, ["out_min"] = 0, ["out_max"] = 66, ["out_up"] = 15, ["out_dw"] = 15, ["log"] = 0 },
+}
 
 -- init values
-
---prop_mode[0] = 1
---prop_mode[1] = 1
-
---prop_speed_cmd[0] = prop_speed_max
---prop_speed_cmd[1] = prop_speed_max
-
---eng_throttle[0] = 0.637
---eng_throttle[1] = 0.637
-
-hotel_mode_ratio[0] = 0.1
 hotel_mode[0] = 0
+
+--engine overrides
+set( "sim/operation/override/override_throttles", 1 )
+set( "sim/operation/override/override_prop_mode", 1 )
+set( "sim/operation/override/override_prop_pitch", 1 )
+set( "sim/operation/override/override_mixture", 1 )
+--set( "sim/operation/override/override_fuel_flow", 1 )
+set( "sim/operation/override/override_itt_egt", 1 )
+
+--set idle ratios to low values
+set( "sim/aircraft2/engine/low_idle_ratio", 0.1 )
+set( "sim/aircraft2/engine/high_idle_ratio", 0.1 )
+
+--hotel mode prop deceleration ratio
+set("sim/cockpit2/switches/hotel_mode_ratio", 0.1)
 
 
 require "pid"
-
+require "gain"
 
 function round(num, numDecimalPlaces)
 	local mult = 10^(numDecimalPlaces or 0)
@@ -240,23 +129,48 @@ function round(num, numDecimalPlaces)
 end
 
 
+function lookup_table(input, table)
+	local result = 0
+	for i = 1, #table, 2 do
+		if input == table[i] then
+			result = table[i+1]
+			break
+		elseif input < table[i] then
+			if i == 1 then
+				result = table[i+1]
+			else
+				result = table[i-1] + ( ( ( table[i+1] - table[i-1] ) / ( table[i] - table[i-2] ) ) * ( input - table[i-2] ) )
+			end
+			break
+		end
+	end
+	return result
+end
+
+
 function eec(ind)
-	local pla = round(pl[ind] * 100, 1)
-	local cla = round(cl[ind] * 63, 1)
+	-- PLA
+	if gust_lock == 1 and pl[ind] > 0.34 then
+		-- gust lock limit
+		pla_gain[ind]["in"] = 0.34
+	elseif idle_gate == 1 and pl[ind] < 0.37 then
+		--idle gate limit
+		pla_gain[ind]["in"] = 0.37
+	else
+		pla_gain[ind]["in"] = pl[ind]
+	end
+	gain.run(pla_gain[ind])
+	local pla = pla_gain[ind]["out"]
+
+	-- CLA
+	cla_gain[ind]["in"] = cl[ind]
+	gain.run(cla_gain[ind])
+	local cla = cla_gain[ind]["out"]
 
 	local temp_prop_mode = 0
-	local temp_eng_mix = 0
+	local temp_prop_pitch = 0
+	local temp_eng_mixture = 0
 	local temp_eng_throttle = 0
-	local temp_prop_speed = 0
-
-	-- PLA
-	if gust_lock == 1 and pla > 34 then
-		-- gust lock limit
-		pla = 34
-	elseif idle_gate == 1 and pla > 37 then
-		--idle gate limit
-		pla = 37
-	end
 
 	--PEC status
 	if pec_cmd[ind] == 1 then
@@ -278,209 +192,183 @@ function eec(ind)
 		eec_ind[ind] = 1
 	end
 
-	if pla < 13 then
-		-- reverse
-		--PEC
-		if prop_pec[ind] == 1 then
-			--PEC on
+	--PEC
+	if cla >= 55 then
+		-- NP 100% OVRD
+		temp_prop_speed = prop_speed_max
+	elseif prop_pec[ind] == 1 then
+		--PEC on
+		if pwr_mgmt[ind] == 0 or pwr_mgmt[ind] == 1 then
+			-- TO and MCT
 			temp_prop_speed = prop_speed_max
-			temp_prop_mode = 3
-			temp_eng_mix = 1
-			temp_eng_throttle = -2.0 - ( ( -1.0 / 13 ) * pla )
-		else
-			--PEC off - no reverse
-			temp_prop_speed = prop_speed_max * 0.708
-			temp_prop_mode = 2
-			temp_eng_mix = 0.5
-			temp_eng_throttle = -1
+		elseif pwr_mgmt[ind] == 2 or pwr_mgmt[ind] == 3 then
+			-- CLB and CRZ
+			temp_prop_speed = prop_speed_max * 0.82
 		end
-
-		--reset EEC frozen (as bellow 52 PLA)
-		eng_throttle_last[ind] = 0
-	elseif pla < 37 then
-		-- beta range
-		temp_prop_speed = prop_speed_max * 0.708
-		temp_prop_mode = 2
-		temp_eng_throttle = -1.0 - ( ( -1.0 / 24 ) * ( pla - 13 ) )
-
-		--EEC
-		if eng_eec[ind] == 1 then
-			--EEC on
-			-- fuel governing - mixture to simulate high and low idle with PID to keep constant Np 70.8%
-			mixture_pid[ind]["cv"] = eng_mixture[ind]
-			mixture_pid[ind]["pv"] = prop_speed_act[ind]
-			mixture_pid[ind]["sp"] = prop_speed_max * 0.708
-			pid.run(mixture_pid[ind])
-			temp_eng_mix = mixture_pid[ind]["cv"]
-		else
-			--EEC off
-			temp_eng_mix = 0.5 + ( ( 0.5 / 24 ) * ( pla - 13 ) )
-		end
-
-		--reset EEC frozen (as bellow 52 PLA)
-		eng_throttle_last[ind] = 0
+		--keep last value for PEC off
+		prop_speed_last[ind] = temp_prop_speed
 	else
-		-- alpha range
-		temp_prop_mode = 1
-		temp_eng_mix = 1
-		eng_mixture[ind] = 1
+		--PEC off
+		temp_prop_speed = prop_speed_last[ind]
+	end
+	if pla < 13 then
+		temp_prop_speed = prop_speed_max * 0.91
+	elseif pla < 37 then
+		temp_prop_speed = prop_speed_max * 0.708
+	elseif pla < 59 then
+		-- prop speed transition mode
+		temp_prop_speed = ( prop_speed_max * 0.708 ) + ( ( ( temp_prop_speed - ( prop_speed_max * 0.708 ) ) / 22 ) * ( pla - 37 ) )
+	end
 
-		--PEC
-		if prop_pec[ind] == 1 then
-			--PEC on
-			if pwr_mgmt[ind] == 0 or pwr_mgmt[ind] == 1 then
-				-- TO and MCT
-				temp_prop_speed = prop_speed_max
-			elseif pwr_mgmt[ind] == 2 or pwr_mgmt[ind] == 3 then
-				-- CLB and CRZ
-				temp_prop_speed = prop_speed_max * 0.82
+	--PVM
+	if cla < 1.7 then
+		temp_prop_mode = 0
+		temp_eng_mixture = 0
+		prop_pitch_gain[ind]["in"] = 78.5
+		prop_feather[ind] = 1
+	elseif cla < 25.7 or eng_autofeather[ind] == 2 then
+		--feather
+		temp_prop_mode = 0
+		temp_eng_mixture = 0.5
+		prop_pitch_gain[ind]["in"] = 78.5
+		prop_feather[ind] = 1
+	elseif pla < 13 then
+		-- reverse
+		temp_prop_mode = 3
+		prop_pitch_gain[ind]["in"] = prop_beta["reverse"] + ( ( math.abs(prop_beta["reverse"] - prop_beta["beta"]) / 13 ) * ( pla ) )
+		temp_eng_mixture = 1
+	elseif pla < 37 then
+		-- ground beta
+		temp_prop_mode = 2
+		temp_eng_mixture = 0.5
+		prop_pitch_gain[ind]["in"] = prop_beta["beta"] + ( ( math.abs(prop_beta["beta"] - prop_beta["alpha"]) / 24 ) * ( pla - 13 ) )
+	elseif pla < 45 then
+		-- flight beta
+		temp_prop_mode = 2
+		prop_pitch_gain[ind]["in"] = prop_beta["alpha"]
+		temp_eng_mixture = 0.5
+	else
+		-- alpha
+		temp_prop_mode = 1
+		-- PID to set prop pitch to keep constant prop speed
+		pvm_pitch_pid[ind]["cv"] = prop_pitch[ind] - prop_beta["alpha"]
+		pvm_pitch_pid[ind]["pv"] = prop_speed[ind]
+		pvm_pitch_pid[ind]["sp"] = temp_prop_speed
+		pvm_pitch_pid[ind]["ff"] = ( ( eng_power[ind] / temp_prop_speed ) ^ ( 1 / 2.8 ) ) - prop_beta["alpha"]
+		pid.run(pvm_pitch_pid[ind])
+		prop_pitch_gain[ind]["in"] = prop_beta["alpha"] + pvm_pitch_pid[ind]["cv"]
+		temp_eng_mixture = 1
+	end
+	--limit prop pitch rate
+	gain.run(prop_pitch_gain[ind])
+	temp_prop_pitch = prop_pitch_gain[ind]["out"]
+
+	--EEC / HMU
+	if eng_eec[ind] == 1 and cla > 33.7 and eng_autofeather[ind] ~= 2 then
+		-- PWR_MGMT
+		local power_curve
+		if pwr_mgmt[ind] == 0 then
+			if eng_uptrim[ind] == 1 then
+				-- RTO
+				power_curve = power_pla["RTO"]
+			else
+				-- TO
+				power_curve = power_pla["TO"]
 			end
-			if pla < 59 then
-				-- prop speed transition mode
-				temp_prop_speed = ( prop_speed_max * 0.708 ) + ( ( ( temp_prop_speed - ( prop_speed_max * 0.708 ) ) / 22 ) * ( pla - 37 ) )
-			end
-			--keep last value for PEC off
-			prop_speed_last[ind] = temp_prop_speed
-		else
-			--PEC off
-			temp_prop_speed = prop_speed_last[ind]
+		elseif pwr_mgmt[ind] == 1 then
+			-- MCT
+			power_curve = power_pla["MCT"]
+		elseif pwr_mgmt[ind] == 2 then
+			-- CLB
+			power_curve = power_pla["CLB"]
+		elseif pwr_mgmt[ind] == 3 then
+			-- CRZ
+			power_curve = power_pla["CRZ"]
 		end
 
-		--EEC
-		if eng_eec[ind] == 1 then
-			--EEC on / HMU top law
-			-- PWR_MGMT
-			if pwr_mgmt[ind] == 0 then
-				if eng_uptrim[ind] == 1 then
-					-- RTO
-					power_curve = power_pla["RTO"]
-				else
-					-- TO
-					power_curve = power_pla["TO"]
-				end
-			elseif pwr_mgmt[ind] == 1 then
-				-- MCT
-				power_curve = power_pla["MCT"]
-			elseif pwr_mgmt[ind] == 2 then
-				-- CLB
-				power_curve = power_pla["CLB"]
-			elseif pwr_mgmt[ind] == 3 then
-				-- CRZ
-				power_curve = power_pla["CRZ"]
-			end
-
+		--EEC on / HMU top law
+		if pla < 45 then
+			-- fuel governing - keep constant Np
+			eec_propspeed_pid[ind]["cv"] = eng_throttle[ind]
+			eec_propspeed_pid[ind]["pv"] = prop_speed[ind]
+			eec_propspeed_pid[ind]["sp"] = temp_prop_speed
+			--eec_propspeed_pid[ind]["ff"] = ( temp_prop_speed * math.sin(math.rad(temp_prop_pitch)) ) / 70
+			eec_propspeed_pid[ind]["ff"] = 0
+			pid.run(eec_propspeed_pid[ind])
+			temp_eng_throttle = eec_propspeed_pid[ind]["cv"]
+		else
 			-- get commanded engine power
-			local eng_power_ratio = 0
-			for i = 1, #power_curve, 2 do
-				if pla == power_curve[i] then
-					eng_power_ratio = power_curve[i+1]
-					break
-				elseif pla < power_curve[i] then
-					eng_power_ratio = power_curve[i-1] + ( ( ( power_curve[i+1] - power_curve[i-1] ) / ( power_curve[i] - power_curve[i-2] ) ) * ( pla - power_curve[i-2] ) )
-					break
-				end
+			local eng_power_ratio = lookup_table(pla, power_curve)
+
+			-- limit max power by ITT based on OAT and pressure altitude
+			-- TODO lookup in power tables and/or provide sensible calculation???
+			if eng_bleed_val[ind] == 1 then
+			--air_pressure
+			--air_temperature
+			else
+
 			end
-
+			
 			-- PID to set engine throttle to produce FADEC commanded power
-			throttle_pid[ind]["cv"] = eng_throttle[ind]
-			throttle_pid[ind]["pv"] = eng_power_act[ind]
-			throttle_pid[ind]["sp"] = eng_power_ratio * eng_power_max
-			throttle_pid[ind]["ff"] = eng_power_ratio / 1.15
-			pid.run(throttle_pid[ind])
-			temp_eng_throttle = throttle_pid[ind]["cv"]
+			eec_power_pid[ind]["cv"] = eng_throttle[ind]
+			eec_power_pid[ind]["pv"] = eng_power[ind]
+			eec_power_pid[ind]["sp"] = eng_power_ratio * eng_power_max
+			eec_power_pid[ind]["ff"] = eng_power_ratio / 1.15
+			pid.run(eec_power_pid[ind])
+			temp_eng_throttle = eec_power_pid[ind]["cv"]
+		end
 
-			--keep last value for EEC off
+		--keep last value for EEC off
+		if pla <= 52 then
+			--reset EEC frozen (as bellow 52 PLA)
+			eng_throttle_last[ind] = 0
+		else
+			eng_throttle_last[ind] = temp_eng_throttle
+		end
+
+		-- FDAU bug - find max torque for given PWR MGMT mode
+		if pwr_mgmt[ind] == 0 and eng_atpcs ~= 0 then
+			-- TO reserved power
+			power_curve = power_pla["RTO"]
+		end
+
+		-- get PLA notch engine power
+		local eng_power_ratio = lookup_table(67, power_curve)
+
+		-- limit FDAU power by ITT based on OAT and pressure altitude
+		-- TODO lookup in power tables and/or provide sensible calculation???
+		--air_pressure
+		--air_temperature
+
+		--calculate FDAU torque from power and prop speed for given mode
+		if pwr_mgmt[ind] == 0 or pwr_mgmt[ind] == 1 then
+			-- TO and MCT
+			eec_fdau[ind] = eng_power_ratio
+		elseif pwr_mgmt[ind] == 2 or pwr_mgmt[ind] == 3 then
+			-- CLB and CRZ
+			eec_fdau[ind] = eng_power_ratio / 0.82
+		end
+	else
+		if eng_throttle_last[ind] == 0 then
+			--EEC off / HMU base law
+			-- get commanded engine NH
+			local eng_nh_ratio = lookup_table(pla, base_pla)
+
+			-- PID to set engine throttle to produce NH
+			hmu_nhspeed_pid[ind]["cv"] = eng_throttle[ind]
+			hmu_nhspeed_pid[ind]["pv"] = eng_nh[ind]
+			hmu_nhspeed_pid[ind]["sp"] = eng_nh_ratio * 100
+			hmu_nhspeed_pid[ind]["ff"] = ( eng_nh_ratio - 0.7 ) * 0.3
+			pid.run(hmu_nhspeed_pid[ind])
+			temp_eng_throttle = hmu_nhspeed_pid[ind]["cv"]
+		else
+			--EEC frozen
+			temp_eng_throttle = eng_throttle_last[ind]
 			if pla <= 52 then
 				--reset EEC frozen (as bellow 52 PLA)
 				eng_throttle_last[ind] = 0
-			else
-				eng_throttle_last[ind] = temp_eng_throttle
-			end
-
-			-- FDAU bug
-			if pwr_mgmt[ind] == 0 and eng_atpcs ~= 0 and pla > 66 and pla < 68 then
-				-- TO reserved power
-				power_curve = power_pla["RTO"]
-			end
-
-			-- get PLA notch engine power
-			local eng_power_ratio = 0
-			for i = 1, #power_curve, 2 do
-				if pla == power_curve[i] then
-					eng_power_ratio = power_curve[i+1]
-					break
-				elseif pla < power_curve[i] then
-					eng_power_ratio = power_curve[i-1] + ( ( ( power_curve[i+1] - power_curve[i-1] ) / ( power_curve[i] - power_curve[i-2] ) ) * ( 67 - power_curve[i-2] ) )
-					break
-				end
-			end
-			-- limit max power by ITT based on OAT and air density/pressure
-			-- TODO lookup in power tables and/or provide sensible calculation???
-			if eng_bleed_val[ind] == 1 then
-
-			else
-
-			end
-
-			--calculate maximum notch torque from power and prop speed for given mode
-			if pwr_mgmt[ind] == 0 or pwr_mgmt[ind] == 1 then
-				-- TO and MCT
-				eec_fdau[ind] = eng_power_ratio
-			elseif pwr_mgmt[ind] == 2 or pwr_mgmt[ind] == 3 then
-				-- CLB and CRZ
-				eec_fdau[ind] = eng_power_ratio / 0.82
-			end
-		else
-			if eng_throttle_last[ind] == 0 then
-				--EEC off / HMU base law
-				power_curve = base_pla
-				-- get commanded engine throttle
-				local eng_power_ratio = 0
-				for i = 1, #power_curve, 2 do
-					if pla == power_curve[i] then
-						temp_eng_throttle = power_curve[i+1]
-						break
-					elseif pla < power_curve[i] then
-						temp_eng_throttle = power_curve[i-1] + ( ( ( power_curve[i+1] - power_curve[i-1] ) / ( power_curve[i] - power_curve[i-2] ) ) * ( pla - power_curve[i-2] ) )
-						break
-					end
-				end
-			else
-				--EEC frozen
-				temp_eng_throttle = eng_throttle_last[ind]
-				if pla <= 52 then
-					--reset EEC frozen (as bellow 52 PLA)
-					eng_throttle_last[ind] = 0
-				end
 			end
 		end
-		-- to fix 11.35 reverse runaway bug which shall be fixed in 11.40
-		fix_throttle_bug[ind] = temp_eng_throttle
-	end
-
-	--CLA
-	if cla < 1.7 then
-		-- shutdown + feather
-		temp_prop_mode = 0
-		temp_eng_mix = 0
-		prop_feather[ind] = 1
-	elseif cla < 25.7 or eng_autofeather[ind] == 2 then
-		-- feather
-		temp_prop_mode = 0
-		--temp_eng_mix = 0.5
-		prop_feather[ind] = 1
-	elseif cla < 33.7 then
-		-- NP governing cancel
-		temp_prop_mode = 2
-		--temp_eng_mix = 0.5
-		prop_feather[ind] = 0
-	elseif cla < 55 then
-		-- CL AUTO
-		prop_feather[ind] = 0
-	else
-		-- NP 100% OVRD
-		temp_prop_speed = prop_speed_max
-		prop_feather[ind] = 0
 	end
 
 	--propeller brake
@@ -491,7 +379,7 @@ function eec(ind)
 	--low pitch
 	if prop_pitch[ind] < 14 then
 		low_pitch_ind[ind] = 1
-		if on_ground == 0 then
+		if on_ground[1] == 0 and on_ground[2] == 0 then
 
 		end
 	else
@@ -499,15 +387,15 @@ function eec(ind)
 	end
 
 	prop_mode[ind] = temp_prop_mode
-	prop_speed_cmd[ind] = temp_prop_speed
+	prop_pitch[ind] = temp_prop_pitch
 	eng_throttle[ind] = temp_eng_throttle
-	eng_mixture[ind] = temp_eng_mix
+	eng_mixture[ind] = temp_eng_mixture
 end
 
 
 function pbrake(pla, cla)
 	-- prop break ready
-	if on_ground[0] == 1 and cla < 25.7 and pla <= 35 and hydraulic_pressure_blue[0] > 2000 then
+	if on_ground[1] == 1 and on_ground[2] == 1 and cla < 25.7 and pla <= 35 and hydraulic_pressure_blue[0] > 2000 then
 		prop_brake_ind[1] = 1
 	else
 		prop_brake_ind[1] = 0
@@ -534,7 +422,7 @@ function pbrake(pla, cla)
 				prop_brake = 1
 				prop_brake_ind[0] = 1
 				prop_brake_ind[2] = 0
-			elseif prop_brake == 1 and prop_speed_act[1] == 0 then
+			elseif prop_brake == 1 and prop_speed[1] == 0 then
 				-- prop break engaged
 				prop_brake_timer = 0
 				prop_brake = 2
@@ -553,7 +441,7 @@ function pbrake(pla, cla)
 		prop_brake_ind[0] = 1
 	elseif prop_brake == 3 then
 		-- unlocking
-		if prop_speed_act[1] > prop_speed_max * 0.2 then
+		if prop_speed[1] > prop_speed_max * 0.2 then
 			-- unlocked
 			prop_brake_timer = 0
 			prop_brake = 0
@@ -606,16 +494,16 @@ function atpcs()
 		end
 		return
 	elseif atpcs_cmd[0] == 1 and pwr_mgmt[0] == 0 and pwr_mgmt[1] == 0 and eng_autofeather[0] ~= 2 and eng_autofeather[1] ~= 2 and round(pl[0] * 100, 1) > 49 and round(pl[1] * 100, 1) > 49 then
-		if eng_torque_act[0] > eng_torque_max * 0.46 and eng_torque_act[1] > eng_torque_max * 0.46 then
+		if eng_torque[0] > eng_torque_max * 0.46 and eng_torque[1] > eng_torque_max * 0.46 then
 			--arming conditions met
-			if on_ground[0] == 1 then
+			if on_ground[1] == 1 or on_ground[2] == 1 then
 				--autofeather + uptrim armed
 				eng_atpcs = 2
 			elseif eng_atpcs ~= 2 then
 				--autofeather armed
 				eng_atpcs = 1
 			end
-		elseif eng_atpcs ~= 0 and eng_torque_act[0] < eng_torque_max * 0.46 and eng_torque_act[1] < eng_torque_max * 0.46 then
+		elseif eng_atpcs ~= 0 and eng_torque[0] < eng_torque_max * 0.46 and eng_torque[1] < eng_torque_max * 0.46 then
 			--disarm conditions met
 			eng_atpcs = 0
 		end
@@ -636,7 +524,7 @@ function atpcs()
 				end
 				eng_autofeather_timer = 0
 			end
-		elseif eng_torque_act[0] < eng_torque_max * 0.18 then
+		elseif eng_torque[0] < eng_torque_max * 0.18 then
 			--schedulle autofeather
 			eng_autofeather[0] = 1
 			eng_autofeather_timer = os.clock() + 2.15
@@ -644,7 +532,7 @@ function atpcs()
 				--trigger uptrim
 				eng_uptrim[1] = 1
 			end
-		elseif eng_torque_act[1] < eng_torque_max * 0.46 then
+		elseif eng_torque[1] < eng_torque_max * 0.46 then
 			--schedulle autofeather
 			eng_autofeather[1] = 1
 			eng_autofeather_timer = os.clock() + 2.15
@@ -681,10 +569,10 @@ function sync()
 		--prop synchrophazer off
 		prop_sync[0] = 0
 		sync_ind[0] = 1
-	elseif pwr_mgmt[0] ~= 0 and pwr_mgmt[1] ~= 0 and prop_speed_act[0] > prop_speed_max * 0.7 and prop_speed_act[1] > prop_speed_max * 0.7 then
+	elseif pwr_mgmt[0] ~= 0 and pwr_mgmt[1] ~= 0 and prop_speed[0] > prop_speed_max * 0.7 and prop_speed[1] > prop_speed_max * 0.7 then
 		--prop synchrophazer on
 		prop_sync[0] = 1
-		if math.abs( prop_speed_act[0] - prop_speed_act[1] ) / prop_speed_max > 0.025 then
+		if math.abs( prop_speed[0] - prop_speed[1] ) / prop_speed_max > 0.025 then
 			--prop synchrophazer out of authority
 			sync_ind[0] = 2
 		else
@@ -705,9 +593,11 @@ end
 function power()
 	--idle gate and gust lock function
 	gust_lock = gust_lock_cmd[0]
-	if on_ground[0] or idle_gate_cmd[0] then
+	if ( on_ground[1] == 0 and on_ground[2] == 0 ) or idle_gate_cmd[0] == 1 then
+		-- both landing gears released
 		idle_gate = 0
-	else
+	elseif ( on_ground[1] == 1 or on_ground[2] == 1 ) or idle_gate_cmd[0] == 0 then
+		-- one landing gear compressed
 		idle_gate = 1
 	end
 

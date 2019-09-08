@@ -1,42 +1,18 @@
--- ATPCS button, indicator and test rotaty selector
-bleed_cmd = create_dataref_table("atr/air/bleed_cmd", "Int")
-bleed_cmd[0] = 1
-bleed_ind = create_dataref_table("atr/air/bleed_ind", "Int")
-bleed_ind[0] = 0
+-- ATR AIR simulation
+-- 2019 @litinoveweedle
+
+if PLANE_ICAO ~= "ATR75" then
+	return
+end
 
 
-
-
--- pressurization packs, off or on
-pack_center = dataref_table("sim/cockpit2/bleedair/actuators/pack_center")
-pack_left = dataref_table("sim/cockpit2/bleedair/actuators/pack_left")
-pack_right = dataref_table("sim/cockpit2/bleedair/actuators/pack_right")
-
-duct_press_center = dataref_table("sim/cockpit2/bleedair/indicators/bleed_available_center")
-duct_press_left = dataref_table("sim/cockpit2/bleedair/indicators/bleed_available_left")
-duct_press_right = dataref_table("sim/cockpit2/bleedair/indicators/bleed_available_right")
-
-duct_left_val = dataref_table("sim/cockpit2/bleedair/actuators/isol_valve_left")
-duct_right_val = dataref_table("sim/cockpit2/bleedair/actuators/isol_valve_right")
-
--- engine bleed air
-eng_bleed_val = dataref_table("sim/cockpit2/bleedair/actuators/engine_bleed_sov")
-
-
-eng_n2 = dataref_table("sim/cockpit2/engine/indicators/N2_percent")
-
-
-
-prop_brake_cmd = create_dataref_table("atr/power/prop_brake_cmd", "Int")
-
+---- CODE STARTS ----
 
 -- used only for compatibility reason, set off
-pack_center[0] = 0
+set("sim/cockpit2/bleedair/actuators/pack_center", 0)
+
 pack_left[0] = 1
 pack_right[0] = 1
-
-
-uptrim_ind = create_dataref_table("atr/power/uptrim_ind", "IntArray")
 
 
 function bleed(ind)
