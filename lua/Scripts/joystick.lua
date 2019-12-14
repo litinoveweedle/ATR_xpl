@@ -27,16 +27,16 @@ local axis_cl2 = 0
 
 function joystick()
 	if axis[axis_pl1] ~= nil then
-		pl[0] = axis[axis_pl1]
+		pdref["power"]["pl"][0] = axis[axis_pl1]
 	end
 	if axis[axis_pl2] ~= nil then
-		pl[1] = axis[axis_pl2]
+		pdref["power"]["pl"][1] = axis[axis_pl2]
 	end
 	if axis[axis_cl1] ~= nil then
-		cl[0] = axis[axis_cl1]
+		pdref["power"]["cl"][0] = axis[axis_cl1]
 	end
 	if axis[axis_cl2] ~= nil then
-		cl[1] = axis[axis_cl2]
+		pdref["power"]["cl"][1] = axis[axis_cl2]
 	end
 end
 
