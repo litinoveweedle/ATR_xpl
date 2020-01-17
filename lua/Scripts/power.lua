@@ -35,129 +35,64 @@ local power_pla = {
 	["CRZ"] = { 37, 0.02, 54, 0.44, 63, 0.76, 65, 0.775, 69, 0.775, 75, 0.96, 78, 1.00, 85, 1.00, 89, 1.02, 91, 1.15, 100, 1.15 }
 }
 
--- polynomials coefficients describing EEC power limits at given ALT for OAT for AC off
--- from FCOM tables found by polynomial calculator https://arachnoid.com/polysolve/
+-- polynomials coefficients describing EEC power limits at given ALT and SAT for AC off
+-- from FCOM tables found by pollynomial fitting using polyfitn in GNU octave
 local power_eec = {
 	["RTO"] = {
-		[-1000] = {  1.4516219821256142e+000, -1.1496581966096254e-002,  1.0287448312417405e-005 },
-		[00000] = {  1.3854683250412159e+000, -1.0720721323318404e-002,  7.0077121441648748e-006 },
-		[01000] = {  1.3265499999996524e+000, -1.0122348484831964e-002,  4.7348484846557772e-006 },
-		[02000] = {  1.2842727272725540e+000, -1.0211305361296573e-002,  1.0198135198026546e-005 },
-		[03000] = {  1.2335379620377400e+000, -9.8623876123752809e-003,  1.0614385614220145e-005 },
-		[04000] = {  1.1727516483515941e+000, -8.8649038461503550e-003,  2.2321428570900740e-006 },
-		[05000] = {  1.1189371687136795e+000, -8.1272462831314934e-003, -3.4744667097142307e-006 },
-		[06000] = {  1.0557783797729685e+000, -6.5364744582049111e-003, -2.4461429308554694e-005 },
-		[07000] = {  1.0053429824561384e+000, -5.6117737525629291e-003, -3.6839257234001207e-005 },
-		[08000] = {  9.6390513833992131e-001, -5.3427865612649169e-003, -3.7104743083001180e-005 },
-		[08500] = {  9.4452742474916362e-001, -5.3552396878483646e-003, -3.3054626532887866e-005 }
+		["ias"] = 60,
+		["polyn"] = { ["2:0"] = -3.2254e-05, ["1:1"] = 2.2839e-07, ["1:0"] = -7.3721e-03, ["0:2"] = 4.4843e-10, ["0:1"] = -4.7348e-05, ["0:0"] = 1.3153e+00 },
 	},
 	["TO"] = {
-		[-1000] = {  1.4525196745314384e+000, -1.1540560668503362e-002,  1.0726512825214165e-005 },
-		[00000] = {  1.3795438106714955e+000, -1.0453208389601199e-002,  3.9548047478202034e-006 },
-		[01000] = {  1.3286902356901771e+000, -1.0243265993263204e-002,  6.3131313130986566e-006 },
-		[02000] = {  1.2779797979801764e+000, -9.9018389018580722e-003,  6.4750064752435064e-006 },
-		[03000] = {  1.2257781107780099e+000, -9.4627594627538763e-003,  5.5500055499307561e-006 },
-		[04000] = {  1.1733626373625576e+000, -8.9104853479802827e-003,  2.8617216116458074e-006 },
-		[05000] = {  1.1210511024922605e+000, -8.2500448897494198e-003,  1.8180349062926433e-006 },
-		[06000] = {  1.0552353514505342e+000, -6.4974271872502796e-003, -2.5136882238254322e-005 },
-		[07000] = {  1.0049590643274835e+000, -5.5762512341458034e-003, -3.7499050656948527e-005 },
-		[08000] = {  9.6421481899742756e-001, -5.4119925967752430e-003, -3.5314323357799990e-005 },
-		[08500] = {  9.4442497212932019e-001, -5.3464325529544001e-003, -3.3491267186916094e-005 }
+		["ias"] = 60,
+		["polyn"] = { ["2:0"] = -3.2254e-05, ["1:1"] = 2.2839e-07, ["1:0"] = -7.3721e-03, ["0:2"] = 4.4843e-10, ["0:1"] = -4.7348e-05, ["0:0"] = 1.3153e+00 },
 	},
 	["MCT"] = {
-		[00000] = {  1.9602310230997284e+000, -3.1036853685272359e-002,  2.2345984598370894e-004 },
-		[02000] = {  1.4433189716641146e+000, -1.4262652622440241e-002,  6.7593049011997194e-005 },
-		]04000] = {  1.3199310908523822e+000, -1.2622780509906281e-002,  5.8960381526135654e-005 },
-		[06000] = {  1.2529025910834244e+000, -1.3091770840700075e-002,  7.1424871464200769e-005 },
-		[08000] = {  1.0604119214089749e+000, -6.0606867156208135e-003, -2.2663177675708815e-005 },
-		[10000] = {  9.7986577105534856e-001, -5.4802872087750462e-003, -2.5482430862030096e-005 },
-		[12000] = {  9.0429888960138793e-001, -5.1410895376039802e-003,  2.2313533065667475e-005 },
-		[14000] = {  8.3188288419889189e-001, -4.9182968885306839e-003, -1.0539538746744470e-005 },
-		[16000] = {  7.6387626440762035e-001, -4.4941299561257180e-003, -3.3472014593143286e-006 },
-		[18000] = {  7.0298149587457404e-001, -4.0682140253707018e-003, -9.9180416311292171e-007 },
-		[20000] = {  6.4882853282664943e-001, -3.7038905109471236e-003,  8.9126633120589676e-007 },
-		[22000] = {  5.9688249985202957e-001, -3.4326342889835883e-003, -6.3560152073053736e-008 },
-		[24000] = {  5.4844710180460132e-001, -3.2152961926797991e-003, -1.7725311666635715e-006 },
-		]25000] = {  5.2464058287034754e-001, -2.9926637965813335e-003,  6.2361553919554029e-007 }
+		["ias"] = 120,
+		["polyn"] = { ["2:0"] = -1.0456e-05, ["1:1"] = 1.7499e-07, ["1:0"] = -7.4846e-03, ["0:2"] = 4.4330e-10, ["0:1"] = -4.5096e-05, ["0:0"] = 1.3773e+00 },
 	},
 	["CLB"] = {
-		[00000] = {  1.3562556013620761e+000, -1.3467019179056143e-002,  5.5117404552694283e-005 },
-		[02000] = {  1.2148794586841882e+000, -1.0277864910070418e-002,  2.3348344984049019e-005 },
-		]04000] = {  1.1342132998745313e+000, -9.8624244325311861e-003,  2.5575310824684918e-005 },
-		[06000] = {  1.0482194593361491e+000, -8.8637094816519778e-003,  1.9860680933457775e-005 },
-		[08000] = {  9.6575868297323708e-001, -7.6104416286347371e-003,  7.4196506128722308e-006 },
-		[10000] = {  8.9357752853095662e-001, -6.4174906667618329e-003, -1.0220205010871874e-005 },
-		[12000] = {  8.4076722176686836e-001, -5.7200210121029181e-003, -2.3562240140723996e-005 },
-		[14000] = {  8.4469741701626988e-001, -5.7269430759278100e-003, -3.7567082681352746e-005 },
-		[16000] = {  7.8614471284379617e-001, -5.4456645958234707e-003, -3.0188616067392172e-005 },
-		[18000] = {  7.2747578942607516e-001, -5.0503819648097656e-003, -2.8542613980444041e-005 },
-		[20000] = {  6.7204754886205553e-001, -4.6507566356536363e-003, -2.6119393264735381e-005 },
-		[22000] = {  6.2020727033493650e-001, -4.2937760550327310e-003, -2.3558753659919592e-005 },
-		[24000] = {  5.7277960899069358e-001, -3.9535836657707216e-003, -2.1720464103870506e-005 },
-		]25000] = {  5.5027320893096743e-001, -3.7355062180164178e-003, -1.9200134231825863e-005 }
+		["ias"] = 170,
+		["polyn"] = { ["2:0"] = -2.5244e-05, ["1:1"] = 1.8407e-07, ["1:0"] = -8.4256e-03, ["0:2"] = 3.3883e-10, ["0:1"] = -3.8979e-05, ["0:0"] = 1.3155e+00 },
 	},
 	["CRZ"] = {
-		[00000] = {  1.5100413364054015e+000, -1.7578986175109654e-002,  8.2661290322522045e-005 },
- 		[05000] = {  1.1916016295598171e+000, -1.1191997381189362e-002,  2.7451863118731792e-005 },
- 		[07500] = {  1.1170753844404742e+000, -1.1792177428844810e-002,  4.5993304194162750e-005 },
- 		[10000] = {  1.0087653860632575e+000, -9.8134272125166115e-003,  2.6189643193041023e-005 },
- 		[12500] = {  9.0915198667910846e-001, -7.1677199668632712e-003, -2.0786946618371492e-005 },
- 		[15000] = {  8.4684465813764809e-001, -6.3859151942552064e-003, -3.2034396938533527e-005 },
- 		[17500] = {  7.8529604637932515e-001, -6.0421901075959471e-003, -2.8070981233786939e-005 },
- 		[20000] = {  7.1821504836736871e-001, -5.5633798455194264e-003, -2.7581295593378559e-005 },
- 		[22500] = {  6.5699328432452275e-001, -5.0921915855985317e-003, -2.5531503924119630e-005 },
- 		[25000] = {  6.0114454799176931e-001, -4.6517988325283722e-003, -2.2678535942968159e-005 }
- 	}	
-}
-
-
--- polynominals coefficients describing OAT corrections for different AC modes
-local power_ac_corr = {
-	["RTO"] = {
-		["off"] = { 0, 1 },
-		["norm"] = {  1.1736134038607378e+001,  8.0617683470385637e-001, -2.4219288414859937e-004 },
-		["high"] = {  1.6722668433577898e+001,  7.4749438463760065e-001, -6.4730379431242877e-004 }
-	},
-	["TO"] = {
-		["off"] = { 0, 1 },
-		["norm"] = {  1.1736134038607378e+001,  8.0617683470385637e-001, -2.4219288414859937e-004 },
-		["high"] = {  1.6722668433577898e+001,  7.4749438463760065e-001, -6.4730379431242877e-004 }
-	},
-	["MCT"] = {
-		["off"] = { 0, 1 },
-		["norm"] = {  7.7559510567296979e+000,  9.1553114571746386e-001,  1.2166295884316020e-004 }, 
-		["high"] = {  1.3126564299626326e+001,  8.3747107340652382e-001,  1.4279459396597215e-004 }
-	},
-	["CLB"] = {
-		["off"] = { 0, 1 },
-		["norm"] = {  9.0858731924360399e+000,  8.7340944303194024e-001, -2.4891248212299436e-004 },
-		["high"] = {  1.3237121429096568e+001,  8.2184578913604667e-001, -2.5695407552812184e-004 }
-	},
-	["CRZ"] = {
-		["off"] = { 0, 1 },
-		["norm"] = {  6.6858731924360386e+000,  8.4800721039249960e-001,  1.0682752661687596e-003 },
-		["high"] = {  1.0843595959480862e+001,  7.8756767322734256e-001,  1.0060873555853382e-003 }
+		["ias"] = 210,
+		["polyn"] = { ["2:0"] = -2.0029e-05, ["1:1"] = 1.7819e-07, ["1:0"] = -9.1393e-03, ["0:2"] = 3.7255e-10, ["0:1"] = -3.8750e-05, ["0:0"] = 1.3388e+00 },
 	}
 }
 
 
--- polynominals coefficients describing EEC power corrections for IAS
-local power_ias_corr = {
-7.22E+01
--8.23E-15
-3.39E-04
-
-
-
-
-	["TO"] = 50,
-	["RTO"] = 50,
-	["MCT"] = 120
-	["CLB"] = 170
-	["CZR"] = 210
+-- polynominals coefficients describing SAT corrections for different AC modes
+local power_ac_corr = {
+	["RTO"] = {
+		["OFF"]  = { ["0"] = 0, ["1"] = 1 },
+		["NORM"] = { ["0"] = 1.1736134038607378e+001, ["1"] = 8.0617683470385637e-001, ["2"] = -2.4219288414859937e-004 },
+		["HIGH"] = { ["0"] = 1.6722668433577898e+001, ["1"] = 7.4749438463760065e-001, ["2"] = -6.4730379431242877e-004 }
+	},
+	["TO"] = {
+		["OFF"]  = { ["0"] = 0, ["1"] = 1 },
+		["NORM"] = { ["0"] = 1.1736134038607378e+001, ["1"] = 8.0617683470385637e-001, ["2"] = -2.4219288414859937e-004 },
+		["HIGH"] = { ["0"] = 1.6722668433577898e+001, ["1"] = 7.4749438463760065e-001, ["2"] = -6.4730379431242877e-004 }
+	},
+	["MCT"] = {
+		["OFF"]  = { ["0"] = 0, ["1"] = 1 },
+		["NORM"] = { ["0"] = 7.7559510567296979e+000, ["1"] = 9.1553114571746386e-001, ["2"] = 1.2166295884316020e-004 },
+		["HIGH"] = { ["0"] = 1.3126564299626326e+001, ["1"] = 8.3747107340652382e-001, ["2"] = 1.4279459396597215e-004 }
+	},
+	["CLB"] = {
+		["OFF"]  = { ["0"] = 0, ["1"] = 1 },
+		["NORM"] = { ["0"] = 9.0858731924360399e+000, ["1"] = 8.7340944303194024e-001, ["2"] = -2.4891248212299436e-004 },
+		["HIGH"] = { ["0"] = 1.3237121429096568e+001, ["1"] = 8.2184578913604667e-001, ["2"] = -2.5695407552812184e-004 }
+	},
+	["CRZ"] = {
+		["OFF"]  = { ["0"] = 0, ["1"] = 1 },
+		["NORM"] = { ["0"] = 6.6858731924360386e+000, ["1"] = 8.4800721039249960e-001, ["2"] = 1.0682752661687596e-003 },
+		["HIGH"] = { ["0"] = 1.0843595959480862e+001, ["1"] = 7.8756767322734256e-001, ["2"] = 1.0060873555853382e-003 }
+	}
 }
 
 
+-- polynominals coefficients describing EEC power corrections for IAS squared at given ALT and SAT
+local power_ias_corr = { ["2:0"] = -1.4073e-10, ["1:1"] = -1.0986e-12, ["1:0"] = -1.1454e-08, ["0:2"] = -2.3022e-15, ["0:1"] = 8.5163e-11, ["0:0"] = 3.2155e-06 }
 
 -- EEC status
 local eng_eec = { ["0"] = 1, ["1"] = 1 }
@@ -386,34 +321,39 @@ function eec(ind)
 
 	--EEC / HMU
 	if eng_eec[ind] == 1 and cla > 33.7 and eng_autofeather[ind] ~= 2 then
-		-- PWR_MGMT
-		local power_curve
-		local eec_curve
-		local ac_flow = "off"
-		local pressure_alt = (1 - math.pow((xdref["air_pressure"][0]/29.92), 0.190284)) * 145366.45;
-		
-		if pdref["power"]["pwr_mgmt"][ind] == 0 then
-			if eng_uptrim[ind] == 1 then
-				-- RTO
-				power_curve = power_pla["RTO"]
-				eec_curve = power_eec["RTO"]
-			else
-				-- TO
-				power_curve = power_pla["TO"]
-				eec_curve = power_eec["TO"]
-			end
+		-- AC MODE
+		local ac_mode = "OFF"
+		if pdref["air"]["ac_mode"][ind] == 1 then
+			ac_mode = "NORM"
+		elseif pdref["air"]["ac_mode"][ind] == 2 then
+			ac_mode = "HIGH"
+		end
+
+		-- PWR MGMT
+		local pwr_mgmt = "TO"
+		if pdref["power"]["pwr_mgmt"][ind] == 0 and eng_uptrim[ind] == 1 then
+			-- RTO
+			pwr_mgmt = "RTO"
 		elseif pdref["power"]["pwr_mgmt"][ind] == 1 then
 			-- MCT
-			power_curve = power_pla["MCT"]
-			eec_curve = power_eec["MCT"]
+			pwr_mgmt = "MCT"
 		elseif pdref["power"]["pwr_mgmt"][ind] == 2 then
 			-- CLB
-			power_curve = power_pla["CLB"]
-			eec_curve = power_eec["CLB"]
+			pwr_mgmt = "CLB"
 		elseif pdref["power"]["pwr_mgmt"][ind] == 3 then
 			-- CRZ
-			power_curve = power_pla["CRZ"]
-			eec_curve = power_eec["CRZ"]
+			pwr_mgmt = "CRZ"
+		end
+
+		-- AC mode corection to SAT
+		local corr_temp = polyn.lookup({ pdref["dadc"]["sat"][0] }, power_ac_corr[pwr_mgmt][ac_mode])
+
+		-- IAS correction to EEC limits
+		local corr_eec
+		if pdref["dadc"]["ias"][0] > 60 then
+			corr_eec = polyn.lookup({ corr_temp, pdref["dadc"]["palt"][0] }, power_ias_corr) * ( ( pdref["dadc"]["ias"][0] ^ 2 ) - ( power_eec[pwr_mgmt]["ias"] ^ 2 ) )
+		else
+			corr_eec = polyn.lookup({ corr_temp, pdref["dadc"]["palt"][0] }, power_ias_corr) * ( ( 60 ^ 2 ) - ( power_eec[pwr_mgmt]["ias"] ^ 2 ) )
 		end
 
 		--EEC on / HMU top law
@@ -428,31 +368,19 @@ function eec(ind)
 			temp_eng_throttle = eec_propspeed_pid[ind]["cv"]
 		else
 			-- get commanded engine power
-			local eng_power_ratio = curve.lookup(pla, power_curve)
-			
-			local corr_temp = 0
-			if ac_flow 
-				corr_temp = polyn.lookup(pressure_alt, xdref["air_temperature"][0], eec_curve)
-				
-			
-			end
-			
-			
-			
+			local eng_power_ratio = curve.lookup(pla, power_pla[pwr_mgmt])
 
-			-- EEC limits max power by ITT based on TAT and pressure altitude
-			eec_limit = polyn.lookup(pressure_alt, xdref["air_temperature"][0], eec_curve)
-			
-			-- IAS correction
-			if pdref["power"]["adc_ias"][0] > 60 then
-				local ias_corr = polyn.lookup(pdref["power"]["adc_ias"], eec_curve)
-				eec_limit = eec_limit * ias_corr
-			end
-			
+			-- EEC thermodynamic limits based on SAT and pressure altitude
+			eec_limit = polyn.lookup({ corr_temp, pdref["dadc"]["palt"][0] }, power_eec[pwr_mgmt]["polyn"])
+
+			-- apply IAS correction for EEC
+			eec_limit = eec_limit + corr_eec
+
+			-- EEC mechanical limit
 			if eec_limit < 1 then
 				eng_power_ratio = eng_power_ratio * eec_limit
 			end
-			
+
 			-- PID to set engine throttle to produce FADEC commanded power
 			eec_power_pid[ind]["cv"] = xdref["eng_throttle"][ind]
 			eec_power_pid[ind]["pv"] = xdref["eng_power"][ind]
@@ -470,19 +398,25 @@ function eec(ind)
 			eng_throttle_last[ind] = temp_eng_throttle
 		end
 
-		-- FDAU bug - find max torque for given PWR MGMT mode
-		if pdref["power"]["pwr_mgmt"][ind] == 0 and eng_atpcs ~= 0 then
-			-- TO reserved power
-			power_curve = power_pla["RTO"]
+		-- FDAU bug - find expected notch torque for given PWR MGMT mode
+		if pdref["power"]["pwr_mgmt"][ind] == 0 then
+			-- TO reserved power is always RTO
+			pwr_mgmt = "RTO"
 		end
 
-		-- get PLA notch engine power
-		local eng_power_ratio = curve.lookup(67, power_curve)
+		-- get PLA notch engine power (notch == 67 PLA)
+		local eng_power_ratio = curve.lookup(67, power_pla[pwr_mgmt])
 
-		-- limit FDAU power by ITT based on OAT and pressure altitude
-		-- TODO lookup in power tables and/or provide sensible calculation???
-		--air_pressure
-		--air_temperature
+		-- EEC thermodynamic limits based on SAT and pressure altitude
+		eec_limit = polyn.lookup({ corr_temp, pdref["dadc"]["palt"][0] }, power_eec[pwr_mgmt]["polyn"])
+
+		-- apply IAS correction for EEC
+		eec_limit = eec_limit + corr_eec
+
+		-- EEC mechanical limit
+		if eec_limit < 1 then
+			eng_power_ratio = eng_power_ratio * eec_limit
+		end
 
 		--calculate FDAU torque from power and prop speed for given mode
 		if pdref["power"]["pwr_mgmt"][ind] == 0 or pdref["power"]["pwr_mgmt"][ind] == 1 then
@@ -535,8 +469,8 @@ function eec(ind)
 		end
 	else
 		pdref["power"]["start_ind"][ind] = 0
-	end	
-		
+	end
+
 	-- ignition
 	if cla < 1.7 then
 		xdref["eng_igniter"][ind] = 0
@@ -562,7 +496,7 @@ function eec(ind)
 	else
 		xdref["eng_igniter"][ind] = 0
 	end
-	
+
 	--low pitch
 	if xdref["prop_pitch"][ind] < 14 then
 		pdref["power"]["low_pitch_ind"][ind] = 1
@@ -778,18 +712,7 @@ function itt(ind)
 end
 
 
-function adc()
-	if pdref["power"]["adc_cmd"] == 0 then
-		pdref["power"]["adc_ias"][0] = xdref["ias1"]
-	elseif pdref["power"]["adc_cmd"] == 0 then
-		pdref["power"]["adc_ias"][0] = xdref["ias2"]
-	end
-end
-
-
 function power()
-	adc()
-
 	--idle gate and gust lock function
 	gust_lock = pdref["power"]["gust_lock_cmd"][0]
 	if ( xdref["on_ground"][1] == 0 and xdref["on_ground"][2] == 0 ) or pdref["power"]["idle_gate_cmd"][0] == 1 then

@@ -7,6 +7,7 @@ pdref = {
 	["ccas"] = {},
 	["air"] = {},
 	["power"] = {},
+	["dadc"] = {},
 }
 
 -- power levers
@@ -103,13 +104,6 @@ pdref["power"]["pec_ind"][1] = 0
 
 pdref["power"]["eng_nl"] = create_dataref_table("atr/power/nl_perc", "FloatArray")
 
--- DADC computer switch
-pdref["power"]["adc_cmd"] = create_dataref_table("atr/power/adc_cmd", "Int")
-pdref["power"]["adc_cmd"][0] = 0
-
-pdref["power"]["adc_ias"] = create_dataref_table("atr/power/adc_ias", "Float")
-pdref["power"]["adc_ias"][0] = 0
-
 
 --corrected ITT
 pdref["power"]["eng_itt"] = create_dataref_table("atr/power/eng_itt", "FloatArray")
@@ -124,9 +118,36 @@ pdref["air"]["bleed_ind"] = create_dataref_table("atr/air/bleed_ind", "IntArray"
 pdref["air"]["bleed_ind"][0] = 0
 pdref["air"]["bleed_ind"][1] = 0
 
+pdref["air"]["ac_mode"] = create_dataref_table("atr/air/ac_mode", "IntArray")
+pdref["air"]["ac_mode"][0] = 0
+pdref["air"]["ac_mode"][1] = 0
+
 
 pdref["ccas"]["ccas_ind"] = create_dataref_table("atr/ccas/anuciators", "IntArray")
 pdref["ccas"]["ccas_ind"][0] = 0
+
+
+
+
+-- DADC computer switch
+pdref["dadc"]["adc_cmd"] = create_dataref_table("atr/dadc/adc_cmd", "Int")
+pdref["dadc"]["adc_cmd"][0] = 0
+
+pdref["dadc"]["ias"] = create_dataref_table("atr/dadc/ias", "Float")
+pdref["dadc"]["ias"][0] = 0
+
+pdref["dadc"]["tas"] = create_dataref_table("atr/dadc/tas", "Float")
+pdref["dadc"]["tas"][0] = 0
+
+pdref["dadc"]["alt"] = create_dataref_table("atr/dadc/alt", "Float")
+pdref["dadc"]["alt"][0] = 0
+
+pdref["dadc"]["palt"] = create_dataref_table("atr/dadc/palt", "Float")
+pdref["dadc"]["palt"][0] = 0
+
+pdref["dadc"]["sat"] = create_dataref_table("atr/dadc/sat", "Float")
+pdref["dadc"]["sat"][0] = 0
+
 
 
 if PLANE_ICAO ~= "ATR75" then
@@ -202,11 +223,19 @@ xdref["hydraulic_pressure_blue"] = dataref_table("sim/cockpit2/hydraulics/indica
 xdref["air_pressure"] = dataref_table("sim/weather/barometer_current_inhg")
 
 -- air temperature outside the aircraft (at altitude)
-xdref["air_temperature"] = dataref_table("sim/weather/temperature_ambient_c")
+xdref["sat"] = dataref_table("sim/cockpit2/temperature/outside_air_temp_degc")
 
 -- indicated air speed
 xdref["ias1"] = dataref_table("sim/cockpit2/gauges/indicators/airspeed_kts_pilot")
 xdref["ias2"] = dataref_table("sim/cockpit2/gauges/indicators/airspeed_kts_copilot")
+
+-- true air speed
+xdref["tas1"] = dataref_table("sim/cockpit2/gauges/indicators/true_airspeed_kts_pilot")
+xdref["tas2"] = dataref_table("sim/cockpit2/gauges/indicators/true_airspeed_kts_copilot")
+
+-- barometric altitude
+xdref["alt1"] = dataref_table("sim/cockpit2/gauges/indicators/altitude_ft_pilot")
+xdref["alt2"] = dataref_table("sim/cockpit2/gauges/indicators/altitude_ft_copilot")
 
 
 -- pressurization packs, off or on
