@@ -257,9 +257,6 @@ function round(num, numDecimalPlaces)
 end
 
 
-local nh_step = 66
-local nh_count = 0
-
 
 function eec(ind)
 	-- PLA
@@ -499,8 +496,8 @@ function eec(ind)
 		if eng_throttle_last[ind] == 0 then
 			--EEC off / HMU base law
 			-- get commanded engine NH
-			--local eng_nh_ratio = curve.lookup(pla, base_pla)
-			local eng_nh_ratio = nh_step
+			local eng_nh_ratio = curve.lookup(pla, base_pla)
+
 			-- PID to set engine throttle to produce NH
 			hmu_nhspeed_pid[ind]["cv"] = xdref["eng_throttle"][ind]
 			hmu_nhspeed_pid[ind]["pv"] = xdref["eng_nh"][ind]
@@ -508,14 +505,6 @@ function eec(ind)
 			--hmu_nhspeed_pid[ind]["ff"] = ( eng_nh_ratio - 70 ) * 30
 			pid.run(hmu_nhspeed_pid[ind])
 			temp_eng_throttle = hmu_nhspeed_pid[ind]["cv"]
-			if math.abs(hmu_nhspeed_pid[ind]["sp"] - hmu_nhspeed_pid[ind]["pv"]) < 0.1 then
-				nh_count = nh_count + 1
-				if nh_count > 100 then
-					logMsg(xdref["eng_nh"][ind] .. ":" .. xdref["eng_throttle"][ind] .. ":" .. xdref["eng_power"][ind])
-					nh_step = nh_step + 1
-					nh_count = 0
-				end
-			end
 		else
 			--EEC frozen
 			temp_eng_throttle = eng_throttle_last[ind]
