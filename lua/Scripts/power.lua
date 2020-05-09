@@ -544,7 +544,7 @@ function pbrake(pla, cla)
 				prop_brake = 1
 				pdref["power"]["prop_brake_ind"][0] = 1
 				pdref["power"]["prop_brake_ind"][2] = 0
-			elseif prop_brake == 1 and prop_speed[1] == 0 then
+			elseif prop_brake == 1 and xdref["prop_speed"][1] == 0 then
 				-- prop break engaged
 				prop_brake_timer = 0
 				prop_brake = 2
