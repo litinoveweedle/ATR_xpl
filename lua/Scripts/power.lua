@@ -106,6 +106,8 @@ local gust_lock = 1
 -- idle gate state
 local idle_gate = 0
 
+-- propeller automatic changeover system timer
+local prop_apcs_timer = { ["0"] = 0, ["1"] = 0 }
 -- propeller brake state 0 - off, 1 - engaging, 2 - engaged, 3 - releasing, -1 - failed
 local prop_brake = 0
 -- propeller brake timer
@@ -244,8 +246,23 @@ function eec(ind)
 		temp_prop_speed = prop_speed_max
 	elseif prop_pec[ind] == 1 then
 		--PEC on
-		if pdref["power"]["pwr_mgmt"][ind] == 0 or pdref["power"]["pwr_mgmt"][ind] == 1 then
-			-- TO and MCT
+		if pdref["power"]["pwr_mgmt"][ind] == 0 then
+			-- TO
+			if prop_apcs_timer[ind] and pla < 62 then
+				-- Automatic Propeller Changeover System
+				if xdref["on_ground"][1] == 0 and xdref["on_ground"][2] == 0 then
+					prop_apcs_timer[ind] = os.clock()
+					temp_prop_speed = prop_speed_max * 0.82
+				elseif os.clock() - prop_apcs_timer[ind] > 16 then
+					prop_apcs_timer[ind] = 0
+					temp_prop_speed = prop_speed_max
+				end
+			else
+				prop_apcs_timer[ind] = 0
+				temp_prop_speed = prop_speed_max
+			end
+		elseif pdref["power"]["pwr_mgmt"][ind] == 1 then
+			-- MCT
 			temp_prop_speed = prop_speed_max
 		elseif pdref["power"]["pwr_mgmt"][ind] == 2 or pdref["power"]["pwr_mgmt"][ind] == 3 then
 			-- CLB and CRZ
@@ -255,6 +272,12 @@ function eec(ind)
 				temp_prop_speed = prop_speed_max - ( ( 0.18 / 16 ) * ( 75 - pla ) )
 			else
 				temp_prop_speed = prop_speed_max
+			end
+			-- Automatic Propeller Changeover System
+			if xdref["on_ground"][1] == 0 and xdref["on_ground"][2] == 0 then
+				prop_apcs_timer[ind] = os.clock()
+			else
+				prop_apcs_timer[ind] = 0
 			end
 		end
 		--keep last value for PEC off
