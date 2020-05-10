@@ -190,6 +190,9 @@ xdref["eng_mixture"] = dataref_table("sim/flightmodel/engine/ENGN_mixt")
 -- commanded throttle
 xdref["eng_throttle"] = dataref_table("sim/flightmodel/engine/ENGN_thro_use")
 
+-- engine running
+xdref["eng_running"] = dataref_table("sim/flightmodel/engine/ENGN_running")
+
 -- engine power produced
 xdref["eng_power"] = dataref_table("sim/cockpit2/engine/indicators/power_watts")
 

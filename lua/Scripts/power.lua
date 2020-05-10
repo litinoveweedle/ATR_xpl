@@ -173,6 +173,7 @@ set( "sim/operation/override/override_prop_pitch", 1 )
 set( "sim/operation/override/override_mixture", 1 )
 --set( "sim/operation/override/override_fuel_flow", 1 )
 --set( "sim/operation/override/override_engines", 1 )
+--set( "sim/operation/override/override_torque_motors", 1 )
 set( "sim/operation/override/override_itt_egt", 1 )
 
 --set idle ratios to low values
@@ -216,6 +217,7 @@ function eec(ind)
 
 	local temp_prop_mode = 0
 	local temp_prop_pitch = 0
+	local temp_prop_speed = 0
 	local temp_prop_feather = 0
 	local temp_eng_mixture = 0
 	local temp_eng_throttle = 0
@@ -297,14 +299,21 @@ function eec(ind)
 
 	--PVM
 	if cla < 1.7 then
+		-- shutoff
 		temp_prop_mode = 0
 		temp_eng_mixture = 0
 		temp_prop_feather = 1
 		prop_pitch_gain[ind]["in"] = 78.5
 	elseif cla < 25.7 or eng_autofeather[ind] == 2 then
-		--feather
+		-- feather
 		temp_prop_mode = 0
 		temp_eng_mixture = 0.5
+		temp_prop_feather = 1
+		prop_pitch_gain[ind]["in"] = 78.5
+	elseif xdref["prop_feather"][ind] == 1 and xdref["eng_running"][ind] == 0 then
+		-- keep feathered
+		temp_prop_mode = 0
+		temp_eng_mixture = 1
 		temp_prop_feather = 1
 		prop_pitch_gain[ind]["in"] = 78.5
 	elseif pla < 13 then
@@ -334,7 +343,11 @@ function eec(ind)
 		pvm_pitch_pid[ind]["cv"] = xdref["prop_pitch"][ind] - prop_beta["alpha"]
 		pvm_pitch_pid[ind]["pv"] = xdref["prop_speed"][ind]
 		pvm_pitch_pid[ind]["sp"] = temp_prop_speed
-		pvm_pitch_pid[ind]["ff"] = ( ( xdref["eng_power"][ind] / temp_prop_speed ) ^ ( 1 / 2.8 ) ) - prop_beta["alpha"]
+		if xdref["eng_running"][ind] == 1 then
+			pvm_pitch_pid[ind]["ff"] = ( ( xdref["eng_power"][ind] / temp_prop_speed ) ^ ( 1 / 2.8 ) ) - prop_beta["alpha"]
+		else
+			pvm_pitch_pid[ind]["ff"] = - prop_beta["alpha"]
+		end
 		pid.run(pvm_pitch_pid[ind])
 		prop_pitch_gain[ind]["in"] = prop_beta["alpha"] + pvm_pitch_pid[ind]["cv"]
 	end
@@ -343,7 +356,13 @@ function eec(ind)
 	temp_prop_pitch = prop_pitch_gain[ind]["out"]
 
 	--EEC / HMU
-	if eng_eec[ind] == 1 and cla > 33.7 and eng_autofeather[ind] ~= 2 then
+	if xdref["eng_running"][ind] == 0 then
+		-- engine not running
+		temp_eng_throttle = 0.05
+		--reset EEC frozen
+		eng_throttle_last[ind] = 0
+	elseif eng_eec[ind] == 1 and cla > 33.7 and eng_autofeather[ind] ~= 2 and xdref["prop_feather"][ind] ~= 1 then
+		-- EEC control
 		-- AC MODE
 		local ac_mode = "OFF"
 		if pdref["air"]["ac_mode"][ind] == 1 then
@@ -450,8 +469,8 @@ function eec(ind)
 			pdref["power"]["eec_fdau"][ind] = eng_power_ratio / 0.82
 		end
 	else
+		--HMU base law
 		if eng_throttle_last[ind] == 0 then
-			--EEC off / HMU base law
 			-- get commanded engine NH
 			local eng_nh_ratio = curve.lookup(pla, base_pla)
 
