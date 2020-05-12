@@ -12,8 +12,8 @@ pdref = {
 
 -- power levers
 pdref["power"]["pl"] = create_dataref_table("atr/power/pl", "FloatArray")
-pdref["power"]["pl"][0] = 0.131
-pdref["power"]["pl"][1] = 0.131
+pdref["power"]["pl"][0] = 0.145
+pdref["power"]["pl"][1] = 0.145
 
 -- condition levers
 pdref["power"]["cl"] = create_dataref_table("atr/power/cl", "FloatArray")
