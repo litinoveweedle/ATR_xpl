@@ -103,7 +103,8 @@ pdref["power"]["pec_ind"][0] = 0
 pdref["power"]["pec_ind"][1] = 0
 
 pdref["power"]["eng_nl"] = create_dataref_table("atr/power/nl_perc", "FloatArray")
-
+pdref["power"]["eng_nl"][0] = 0
+pdref["power"]["eng_nl"][1] = 0
 
 --corrected ITT
 pdref["power"]["eng_itt"] = create_dataref_table("atr/power/eng_itt", "FloatArray")
