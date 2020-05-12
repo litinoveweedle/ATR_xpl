@@ -133,18 +133,18 @@ local prop_beta = { ["reverse"] = -14, ["beta"] = 2, ["alpha"] = 14, ["high"] = 
 
 -- controls TQ by throttle at alpha with EEC on
 local eec_power_pid = {
-	[0] = { ["kp"] = 0.0000002, ["ki"] = 0.000000125, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 0 },
-	[1] = { ["kp"] = 0.0000002, ["ki"] = 0.000000125, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 0 }
+	[0] = { ["kp"] = 0.0000003, ["ki"] = 0.00000015, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 1, ["cv_up"] = 0.08, ["cv_dw"] = 0.08, ["log"] = 0 },
+	[1] = { ["kp"] = 0.0000003, ["ki"] = 0.00000015, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 1, ["cv_up"] = 0.08, ["cv_dw"] = 0.08, ["log"] = 0 }
 }
 -- controls NH by throttle at beta with EEC off
 local hmu_nhspeed_pid = {
-	[0] = { ["kp"] = 0.2, ["ki"] = 0.15, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.0, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 0 },
-	[1] = { ["kp"] = 0.2, ["ki"] = 0.15, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.4, ["cv_max"] = 1, ["cv_up"] = 0.2, ["cv_dw"] = 0.2, ["log"] = 0 }
+	[0] = { ["kp"] = 0.2, ["ki"] = 0.15, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.0, ["cv_max"] = 1, ["cv_up"] = 0.08, ["cv_dw"] = 0.08, ["log"] = 0 },
+	[1] = { ["kp"] = 0.2, ["ki"] = 0.15, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0.4, ["cv_max"] = 1, ["cv_up"] = 0.08, ["cv_dw"] = 0.08, ["log"] = 0 }
 }
 -- controls NP by pitch at alpha
 local pvm_pitch_pid = {
-	[0] = { ["kp"] = -0.5, ["ki"] = -0.3, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 36, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 },
-	[1] = { ["kp"] = -0.5, ["ki"] = -0.3, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 0, ["cv_max"] = 36, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 }
+	[0] = { ["kp"] = -0.5, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 8, ["cv_max"] = 50, ["cv_up"] = 15, ["cv_dw"] = 15, ["log"] = 0 },
+	[1] = { ["kp"] = -0.5, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 8, ["cv_max"] = 50, ["cv_up"] = 15, ["cv_dw"] = 15, ["log"] = 0 }
 }
 -- controls NP by throttle at beta and reverse
 local eec_propspeed_pid = {
@@ -300,6 +300,7 @@ function eec(ind)
 		-- reverse prop speed
 		temp_prop_speed = prop_speed_max * 0.91
 	elseif pla < 37 then
+		-- prop speed underspeed control
 		temp_prop_speed = prop_speed_max * 0.708
 	elseif pla < 59 then
 		-- prop speed transition mode
@@ -319,7 +320,7 @@ function eec(ind)
 		temp_eng_mixture = 0.5
 		temp_prop_feather = 1
 		prop_pitch_gain[ind]["in"] = 78.5
-	elseif xdref["prop_feather"][ind] == 1 and xdref["eng_running"][ind] == 0 then
+	elseif xdref["prop_feather"][ind] == 1 and xdref["eng_power"][ind] < 1000 then
 		-- keep feathered
 		temp_prop_mode = 0
 		temp_eng_mixture = 1
@@ -337,40 +338,29 @@ function eec(ind)
 		temp_eng_mixture = 0.5
 		temp_prop_feather = 0
 		prop_pitch_gain[ind]["in"] = prop_beta["beta"] + ( ( math.abs(prop_beta["beta"] - prop_beta["alpha"]) / 24 ) * ( pla - 13 ) )
-	elseif pla < 45 then
-		-- flight beta
-		temp_prop_mode = 2
-		temp_eng_mixture = 0.5
-		temp_prop_feather = 0
-		prop_pitch_gain[ind]["in"] = prop_beta["alpha"]
 	else
 		-- alpha
 		temp_prop_mode = 1
 		temp_eng_mixture = 1
 		temp_prop_feather = 0
 		-- PID to set prop pitch to keep constant prop speed
-		pvm_pitch_pid[ind]["cv"] = xdref["prop_pitch"][ind] - prop_beta["alpha"]
+		pvm_pitch_pid[ind]["cv"] = xdref["prop_pitch"][ind]
 		pvm_pitch_pid[ind]["pv"] = xdref["prop_speed"][ind]
 		pvm_pitch_pid[ind]["sp"] = temp_prop_speed
-		if xdref["eng_running"][ind] == 1 then
-			pvm_pitch_pid[ind]["ff"] = ( ( xdref["eng_power"][ind] / temp_prop_speed ) ^ ( 1 / 2.8 ) ) - prop_beta["alpha"]
+		if xdref["eng_power"][ind] < 1000 then
+			pvm_pitch_pid[ind]["ff"] = 1
 		else
-			pvm_pitch_pid[ind]["ff"] = - prop_beta["alpha"]
+			pvm_pitch_pid[ind]["ff"] = ( ( xdref["eng_power"][ind] / temp_prop_speed ) ^ ( 1 / 2.8 ) )
 		end
 		pid.run(pvm_pitch_pid[ind])
-		prop_pitch_gain[ind]["in"] = prop_beta["alpha"] + pvm_pitch_pid[ind]["cv"]
+		prop_pitch_gain[ind]["in"] = pvm_pitch_pid[ind]["cv"]
 	end
 	--limit prop pitch rate
 	gain.run(prop_pitch_gain[ind])
 	temp_prop_pitch = prop_pitch_gain[ind]["out"]
 
 	--EEC / HMU
-	if xdref["eng_running"][ind] == 0 then
-		-- engine not running
-		temp_eng_throttle = 0.05
-		--reset EEC frozen
-		eng_throttle_last[ind] = 0
-	elseif eng_eec[ind] == 1 and cla > 33.7 and eng_autofeather[ind] ~= 2 and xdref["prop_feather"][ind] ~= 1 then
+	if xdref["eng_power"][ind] > 1000 and eng_eec[ind] == 1 and cla > 33.7 and eng_autofeather[ind] ~= 2 and xdref["prop_feather"][ind] ~= 1 then
 		-- EEC control
 		-- AC MODE
 		local ac_mode = "OFF"
@@ -408,7 +398,7 @@ function eec(ind)
 		end
 
 		--EEC on / HMU top law
-		if pla < 45 then
+		if pla < 37 then
 			-- fuel governing - keep constant Np
 			eec_propspeed_pid[ind]["cv"] = xdref["eng_throttle"][ind]
 			eec_propspeed_pid[ind]["pv"] = xdref["prop_speed"][ind]
@@ -436,7 +426,7 @@ function eec(ind)
 			eec_power_pid[ind]["cv"] = xdref["eng_throttle"][ind]
 			eec_power_pid[ind]["pv"] = xdref["eng_power"][ind]
 			eec_power_pid[ind]["sp"] = eng_power_ratio * eng_power_max
-			eec_power_pid[ind]["ff"] = eng_power_ratio / 1.15
+			eec_power_pid[ind]["ff"] = 0.25 + ( eng_power_ratio / 1.4 )
 			pid.run(eec_power_pid[ind])
 			temp_eng_throttle = eec_power_pid[ind]["cv"]
 		end
@@ -549,7 +539,7 @@ function eec(ind)
 	end
 
 	--low pitch
-	if xdref["prop_pitch"][ind] < 14 then
+	if xdref["prop_pitch"][ind] < 8 then
 		pdref["power"]["low_pitch_ind"][ind] = 1
 		if weight_on_wheels == 0 then
 			-- TODO low pitch warning
