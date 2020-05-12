@@ -100,6 +100,10 @@ local eng_eec = { ["0"] = 1, ["1"] = 1 }
 -- last EEC commanded throttle
 local eng_throttle_last = { ["0"] = 0, ["1"] = 0 }
 
+-- weight on wheels signal
+local weight_on_wheels = -1
+local weight_on_wheels_last = -1
+
 -- gust lock state
 local gust_lock = 1
 
@@ -198,15 +202,19 @@ end
 
 function eec(ind)
 	-- PLA
-	if gust_lock == 1 and pdref["power"]["pl"][ind] > 0.34 then
+	if gust_lock == 1 then
 		-- gust lock limit
-		pla_gain[ind]["in"] = 0.34
-	elseif idle_gate == 1 and pdref["power"]["pl"][ind] < 0.37 then
-		--idle gate limit
-		pla_gain[ind]["in"] = 0.37
+		pla_gain[ind]["out_max"] = 34
 	else
-		pla_gain[ind]["in"] = pdref["power"]["pl"][ind]
+		pla_gain[ind]["out_max"] = 90
 	end
+	if idle_gate == 1 then
+		--idle gate limit
+		pla_gain[ind]["out_min"] = 37
+	else
+		pla_gain[ind]["out_min"] = 0
+	end
+	pla_gain[ind]["in"] = pdref["power"]["pl"][ind]
 	gain.run(pla_gain[ind])
 	local pla = pla_gain[ind]["out"]
 
@@ -252,7 +260,7 @@ function eec(ind)
 			-- TO
 			if prop_apcs_timer[ind] and pla < 62 then
 				-- Automatic Propeller Changeover System
-				if xdref["on_ground"][1] == 0 and xdref["on_ground"][2] == 0 then
+				if weight_on_wheels == 0 then
 					prop_apcs_timer[ind] = os.clock()
 					temp_prop_speed = prop_speed_max * 0.82
 				elseif os.clock() - prop_apcs_timer[ind] > 16 then
@@ -276,7 +284,7 @@ function eec(ind)
 				temp_prop_speed = prop_speed_max
 			end
 			-- Automatic Propeller Changeover System
-			if xdref["on_ground"][1] == 0 and xdref["on_ground"][2] == 0 then
+			if weight_on_wheels == 0 then
 				prop_apcs_timer[ind] = os.clock()
 			else
 				prop_apcs_timer[ind] = 0
@@ -289,6 +297,7 @@ function eec(ind)
 		temp_prop_speed = prop_speed_last[ind]
 	end
 	if pla < 13 then
+		-- reverse prop speed
 		temp_prop_speed = prop_speed_max * 0.91
 	elseif pla < 37 then
 		temp_prop_speed = prop_speed_max * 0.708
@@ -518,7 +527,7 @@ function eec(ind)
 		xdref["eng_igniter"][ind] = 0
 	elseif pdref["power"]["start_cmd"][ind] == 1 and pdref["power"]["start_sel"][0] > 1 then
 		-- starter inginition
-		if xdref["on_ground"][1] == 1 and xdref["on_ground"][2] == 1 then
+		if weight_on_wheels == 2 then
 			if pdref["power"]["start_sel"][0] == 2 then
 				xdref["eng_igniter"][ind] = 1
 			elseif pdref["power"]["start_sel"][0] == 3 then
@@ -542,8 +551,8 @@ function eec(ind)
 	--low pitch
 	if xdref["prop_pitch"][ind] < 14 then
 		pdref["power"]["low_pitch_ind"][ind] = 1
-		if xdref["on_ground"][1] == 0 and xdref["on_ground"][2] == 0 then
-
+		if weight_on_wheels == 0 then
+			-- TODO low pitch warning
 		end
 	else
 		pdref["power"]["low_pitch_ind"][ind] = 1
@@ -559,7 +568,7 @@ end
 
 function pbrake(pla, cla)
 	-- prop break ready
-	if xdref["on_ground"][1] == 1 and xdref["on_ground"][2] == 1 and cla < 25.7 and pla <= 35 and xdref["hydraulic_pressure_blue"][0] > 2000 then
+	if weight_on_wheels == 2 and cla < 25.7 and pla <= 35 and xdref["hydraulic_pressure_blue"][0] > 2000 then
 		pdref["power"]["prop_brake_ind"][1] = 1
 	else
 		pdref["power"]["prop_brake_ind"][1] = 0
@@ -660,7 +669,7 @@ function atpcs()
 	elseif pdref["power"]["atpcs_cmd"][0] == 1 and pdref["power"]["pwr_mgmt"][0] == 0 and pdref["power"]["pwr_mgmt"][1] == 0 and eng_autofeather[0] ~= 2 and eng_autofeather[1] ~= 2 and round(pdref["power"]["pl"][0] * 100, 1) > 49 and round(pdref["power"]["pl"][1] * 100, 1) > 49 then
 		if xdref["eng_torque"][0] > eng_torque_max * 0.46 and xdref["eng_torque"][1] > eng_torque_max * 0.46 then
 			--arming conditions met
-			if xdref["on_ground"][1] == 1 or xdref["on_ground"][2] == 1 then
+			if weight_on_wheels > 0 then
 				--autofeather + uptrim armed
 				eng_atpcs = 2
 			elseif eng_atpcs ~= 2 then
@@ -754,16 +763,43 @@ function itt(ind)
 end
 
 
-function power()
-	--idle gate and gust lock function
-	gust_lock = pdref["power"]["gust_lock_cmd"][0]
-	if ( xdref["on_ground"][1] == 0 and xdref["on_ground"][2] == 0 ) or pdref["power"]["idle_gate_cmd"][0] == 1 then
-		-- both landing gears released
-		idle_gate = 1
-	elseif ( xdref["on_ground"][1] == 1 or xdref["on_ground"][2] == 1 ) or pdref["power"]["idle_gate_cmd"][0] == 0 then
+function wow()
+	weight_on_wheels_last = weight_on_wheels
+	if xdref["on_ground"][1] == 1 and xdref["on_ground"][2] == 1 then
+		-- both landing gear compressed
+		weight_on_wheels = 2
+	elseif xdref["on_ground"][1] == 1 or xdref["on_ground"][2] == 1 then
 		-- one landing gear compressed
-		idle_gate = 0
+		weight_on_wheels = 1
+	else
+		-- both landing gears released
+		weight_on_wheels = 0
 	end
+end
+
+
+function gate_lock()
+	-- gust lock position
+	gust_lock = pdref["power"]["gust_lock_cmd"][0]
+
+	-- idle gate automatic position
+	if weight_on_wheels ~= weight_on_wheels_last then
+		if weight_on_wheels == 0 then
+			pdref["power"]["idle_gate_cmd"][0] = 1
+		else
+			pdref["power"]["idle_gate_cmd"][0] = 0
+		end
+	end
+	idle_gate = pdref["power"]["idle_gate_cmd"][0]
+end
+
+
+function power()
+	-- weight on wheels function
+	wow()
+
+	-- idle gate and gust lock function
+	gate_lock()
 
 	--atpcs function
 	atpcs()
