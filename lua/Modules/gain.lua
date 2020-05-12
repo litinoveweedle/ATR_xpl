@@ -34,6 +34,12 @@ function run(var)
 	end
 
 	output = var["k"] * var["in"]
+	
+	-- discrete low pass filter, cuts out the high frequency noise
+	if var["rc"] ~= nil then
+		local filter = sample_time / ( var["rc"] +  sample_time )
+		output = var["out_n"] + ( filter * ( output - var["out_n"] ) )
+	end
 
 	--limit output + integrator clipping
 	if max_up ~= nil and output > max_up then
@@ -64,6 +70,10 @@ function init(var)
 		var["out"] = var["out_min"]
 	else
 		var["out"] = var["k"] * var["in"]
+	end
+	
+	if var["rc"] == nil and var["frq"] ~= nil and var["frq"] ~= 0 then
+		var["rc"] = 1 / ( var["frq"] * 2 * pi )
 	end
 
 	var["out_n"] = var["out"]
