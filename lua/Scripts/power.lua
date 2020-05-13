@@ -11,12 +11,6 @@ end
 -- nominal propeller speed rad/sec
 local prop_speed_max = 125.6637
 
--- PEC status
-local prop_pec = { ["0"] = 1, ["1"] = 1 }
-
--- last PEC commanded prop speed
-local prop_speed_last = { ["0"] = prop_speed_max, ["1"] = prop_speed_max }
-
 -- nominal rated engine power in watts
 local eng_power_max = 2050675
 
@@ -28,11 +22,11 @@ local base_pla = { 0, 86, 1.33, 85.76, 2.74, 85.533, 3.95, 85.031, 4.91, 84.396,
 
 -- PLA to power curve
 local power_pla = {
-	["RTO"] = { 37, 0.02, 62, 0.94, 66, 1.000, 68, 1.000, 74, 1.02, 89, 1.02, 91, 1.15, 100, 1.15 },
-	["MCT"] = { 37, 0.02, 54, 0.44, 61, 0.79, 65, 0.909, 68, 0.909, 78, 1.00, 85, 1.00, 89, 1.02, 91, 1.15, 100, 1.15 },
-	["TO"]  = { 37, 0.02, 54, 0.44, 61, 0.79, 65, 0.900, 68, 0.900, 78, 1.00, 85, 1.00, 89, 1.02, 91, 1.15, 100, 1.15 },
-	["CLB"] = { 37, 0.02, 54, 0.44, 63, 0.76, 65, 0.797, 69, 0.797, 75, 0.96, 78, 1.00, 85, 1.00, 89, 1.02, 91, 1.15, 100, 1.15 },
-	["CRZ"] = { 37, 0.02, 54, 0.44, 63, 0.76, 65, 0.775, 69, 0.775, 75, 0.96, 78, 1.00, 85, 1.00, 89, 1.02, 91, 1.15, 100, 1.15 }
+	["RTO"] = { 31, 0.02, 62, 0.94, 66, 1.000, 68, 1.000, 74, 1.02, 89, 1.02, 91, 1.15, 100, 1.15 },
+	["MCT"] = { 31, 0.02, 54, 0.44, 61, 0.79, 65, 0.909, 68, 0.909, 78, 1.00, 85, 1.00, 89, 1.02, 91, 1.15, 100, 1.15 },
+	["TO"]  = { 31, 0.02, 54, 0.44, 61, 0.79, 65, 0.900, 68, 0.900, 78, 1.00, 85, 1.00, 89, 1.02, 91, 1.15, 100, 1.15 },
+	["CLB"] = { 31, 0.02, 54, 0.44, 63, 0.76, 65, 0.797, 69, 0.797, 75, 0.96, 78, 1.00, 85, 1.00, 89, 1.02, 91, 1.15, 100, 1.15 },
+	["CRZ"] = { 31, 0.02, 54, 0.44, 63, 0.76, 65, 0.775, 69, 0.775, 75, 0.96, 78, 1.00, 85, 1.00, 89, 1.02, 91, 1.15, 100, 1.15 }
 }
 
 -- polynomials coefficients describing EEC power limits at given ALT and SAT for AC off
@@ -94,11 +88,20 @@ local power_ac_corr = {
 -- polynominals coefficients describing EEC power corrections for IAS squared at given ALT and SAT
 local power_ias_corr = { ["2:0"] = -1.4073e-10, ["1:1"] = -1.0986e-12, ["1:0"] = -1.1454e-08, ["0:2"] = -2.3022e-15, ["0:1"] = 8.5163e-11, ["0:0"] = 3.2155e-06 }
 
+-- PLA angle
+local pla = { [0] = 0, [1] = 0 }
+
+-- CLA angle
+local cla = { [0] = 0, [1] = 0 }
+
+-- PEC status
+local prop_pec = { [0] = 1, [1] = 1 }
+
 -- EEC status
-local eng_eec = { ["0"] = 1, ["1"] = 1 }
+local eng_eec = { [0] = 1, [1] = 1 }
 
 -- last EEC commanded throttle
-local eng_throttle_last = { ["0"] = 0, ["1"] = 0 }
+local eng_throttle_last = { [0] = 0, [1] = 0 }
 
 -- weight on wheels signal
 local weight_on_wheels = -1
@@ -111,7 +114,7 @@ local gust_lock = 1
 local idle_gate = 0
 
 -- propeller automatic changeover system timer
-local prop_apcs_timer = { ["0"] = 0, ["1"] = 0 }
+local prop_apcs_timer = { [0] = 0, [1] = 0 }
 -- propeller brake state 0 - off, 1 - engaging, 2 - engaged, 3 - releasing, -1 - failed
 local prop_brake = 0
 -- propeller brake timer
@@ -120,12 +123,12 @@ local prop_brake_timer = 0
 -- ATPCS status
 local eng_atpcs = 0
 -- engine uptrim status
-local eng_uptrim = { ["0"] = 0, ["1"] = 0 }
+local eng_uptrim = { [0] = 0, [1] = 0 }
 -- engine autofeather status
-local eng_autofeather = { ["0"] = 0, ["1"] = 0 }
+local eng_autofeather = { [0] = 0, [1] = 0 }
 local eng_autofeather_timer = 0
 
-
+-- propeller angles
 local prop_beta = { ["reverse"] = -14, ["beta"] = 2, ["alpha"] = 14, ["high"] = 50, ["feather"] = 78.5 }
 
 
@@ -210,18 +213,18 @@ function eec(ind)
 	end
 	if idle_gate == 1 then
 		--idle gate limit
-		pla_gain[ind]["out_min"] = 37
+		pla_gain[ind]["out_min"] = 31
 	else
 		pla_gain[ind]["out_min"] = 0
 	end
 	pla_gain[ind]["in"] = pdref["power"]["pl"][ind]
 	gain.run(pla_gain[ind])
-	local pla = pla_gain[ind]["out"]
+	pla[ind] = pla_gain[ind]["out"]
 
 	-- CLA
 	cla_gain[ind]["in"] = pdref["power"]["cl"][ind]
 	gain.run(cla_gain[ind])
-	local cla = cla_gain[ind]["out"]
+	cla[ind] = cla_gain[ind]["out"]
 
 	local temp_prop_mode = 0
 	local temp_prop_pitch = 0
@@ -251,14 +254,14 @@ function eec(ind)
 	end
 
 	--PEC
-	if cla >= 55 then
+	if cla[ind] >= 55 then
 		-- NP 100% OVRD
 		temp_prop_speed = prop_speed_max
 	elseif prop_pec[ind] == 1 then
 		--PEC on
 		if pdref["power"]["pwr_mgmt"][ind] == 0 then
 			-- TO
-			if prop_apcs_timer[ind] and pla < 62 then
+			if prop_apcs_timer[ind] and pla[ind] < 62 then
 				-- Automatic Propeller Changeover System
 				if weight_on_wheels == 0 then
 					prop_apcs_timer[ind] = os.clock()
@@ -276,10 +279,10 @@ function eec(ind)
 			temp_prop_speed = prop_speed_max
 		elseif pdref["power"]["pwr_mgmt"][ind] == 2 or pdref["power"]["pwr_mgmt"][ind] == 3 then
 			-- CLB and CRZ
-			if pla < 69 then
+			if pla[ind] < 69 then
 				temp_prop_speed = prop_speed_max * 0.82
-			elseif pla < 75 then
-				temp_prop_speed = prop_speed_max - ( ( 0.18 / 16 ) * ( 75 - pla ) )
+			elseif pla[ind] < 75 then
+				temp_prop_speed = prop_speed_max - ( ( 0.18 / 16 ) * ( 75 - pla[ind] ) )
 			else
 				temp_prop_speed = prop_speed_max
 			end
@@ -290,31 +293,29 @@ function eec(ind)
 				prop_apcs_timer[ind] = 0
 			end
 		end
-		--keep last value for PEC off
-		prop_speed_last[ind] = temp_prop_speed
 	else
 		--PEC off
-		temp_prop_speed = prop_speed_last[ind]
+		temp_prop_speed = prop_speed_max
 	end
-	if pla < 13 then
+	if pla[ind] < 13 then
 		-- reverse prop speed
 		temp_prop_speed = prop_speed_max * 0.91
-	elseif pla < 37 then
+	elseif pla[ind] < 31 then
 		-- prop speed underspeed control
 		temp_prop_speed = prop_speed_max * 0.708
-	elseif pla < 59 then
+	elseif pla[ind] < 52 then
 		-- prop speed transition mode
-		temp_prop_speed = ( prop_speed_max * 0.708 ) + ( ( ( temp_prop_speed - ( prop_speed_max * 0.708 ) ) / 22 ) * ( pla - 37 ) )
+		temp_prop_speed = ( prop_speed_max * 0.708 ) + ( ( ( temp_prop_speed - ( prop_speed_max * 0.708 ) ) / 21 ) * ( pla[ind] - 31 ) )
 	end
 
 	--PVM
-	if cla < 1.7 then
+	if cla[ind] < 1.7 then
 		-- shutoff
 		temp_prop_mode = 0
 		temp_eng_mixture = 0
 		temp_prop_feather = 1
 		prop_pitch_gain[ind]["in"] = 78.5
-	elseif cla < 25.7 or eng_autofeather[ind] == 2 then
+	elseif cla[ind] < 25.7 or eng_autofeather[ind] == 2 then
 		-- feather
 		temp_prop_mode = 0
 		temp_eng_mixture = 0.5
@@ -326,18 +327,18 @@ function eec(ind)
 		temp_eng_mixture = 1
 		temp_prop_feather = 1
 		prop_pitch_gain[ind]["in"] = 78.5
-	elseif pla < 13 then
+	elseif pla[ind] < 13 then
 		-- reverse
 		temp_prop_mode = 3
 		temp_eng_mixture = 1
 		temp_prop_feather = 0
-		prop_pitch_gain[ind]["in"] = prop_beta["reverse"] + ( ( math.abs(prop_beta["reverse"] - prop_beta["beta"]) / 13 ) * ( pla ) )
-	elseif pla < 37 then
+		prop_pitch_gain[ind]["in"] = prop_beta["reverse"] + ( ( math.abs(prop_beta["reverse"] - prop_beta["beta"]) / 13 ) * ( pla[ind] ) )
+	elseif pla[ind] < 31 then
 		-- ground beta
 		temp_prop_mode = 2
 		temp_eng_mixture = 0.5
 		temp_prop_feather = 0
-		prop_pitch_gain[ind]["in"] = prop_beta["beta"] + ( ( math.abs(prop_beta["beta"] - prop_beta["alpha"]) / 24 ) * ( pla - 13 ) )
+		prop_pitch_gain[ind]["in"] = prop_beta["beta"] + ( ( math.abs(prop_beta["beta"] - prop_beta["alpha"]) / 24 ) * ( pla[ind] - 13 ) )
 	else
 		-- alpha
 		temp_prop_mode = 1
@@ -360,7 +361,7 @@ function eec(ind)
 	temp_prop_pitch = prop_pitch_gain[ind]["out"]
 
 	--EEC / HMU
-	if xdref["eng_power"][ind] > 1000 and eng_eec[ind] == 1 and cla > 33.7 and eng_autofeather[ind] ~= 2 and xdref["prop_feather"][ind] ~= 1 then
+	if xdref["eng_power"][ind] > 1000 and eng_eec[ind] == 1 and cla[ind] > 33.7 and eng_autofeather[ind] ~= 2 and xdref["prop_feather"][ind] ~= 1 then
 		-- EEC control
 		-- AC MODE
 		local ac_mode = "OFF"
@@ -398,7 +399,7 @@ function eec(ind)
 		end
 
 		--EEC on / HMU top law
-		if pla < 37 then
+		if pla[ind] < 31 then
 			-- fuel governing - keep constant Np
 			eec_propspeed_pid[ind]["cv"] = xdref["eng_throttle"][ind]
 			eec_propspeed_pid[ind]["pv"] = xdref["prop_speed"][ind]
@@ -409,7 +410,7 @@ function eec(ind)
 			temp_eng_throttle = eec_propspeed_pid[ind]["cv"]
 		else
 			-- get commanded engine power
-			local eng_power_ratio = curve.lookup(pla, power_pla[pwr_mgmt])
+			local eng_power_ratio = curve.lookup(pla[ind], power_pla[pwr_mgmt])
 
 			-- EEC thermodynamic limits based on SAT and pressure altitude
 			eec_limit = polyn.lookup({ corr_temp, pdref["dadc"]["palt"][0] }, power_eec[pwr_mgmt]["polyn"])
@@ -432,7 +433,7 @@ function eec(ind)
 		end
 
 		--keep last value for EEC off
-		if pla <= 52 then
+		if pla[ind] <= 52 then
 			--reset EEC frozen (as bellow 52 PLA)
 			eng_throttle_last[ind] = 0
 		else
@@ -471,7 +472,7 @@ function eec(ind)
 		--HMU base law
 		if eng_throttle_last[ind] == 0 then
 			-- get commanded engine NH
-			local eng_nh_ratio = curve.lookup(pla, base_pla)
+			local eng_nh_ratio = curve.lookup(pla[ind], base_pla)
 
 			-- PID to set engine throttle to produce NH
 			hmu_nhspeed_pid[ind]["cv"] = xdref["eng_throttle"][ind]
@@ -483,16 +484,11 @@ function eec(ind)
 		else
 			--EEC frozen
 			temp_eng_throttle = eng_throttle_last[ind]
-			if pla <= 52 then
+			if pla[ind] <= 52 then
 				--reset EEC frozen (as bellow 52 PLA)
 				eng_throttle_last[ind] = 0
 			end
 		end
-	end
-
-	--propeller brake
-	if ind == 1 then
-		pbrake(pla, cla)
 	end
 
 	-- start sequence
@@ -513,7 +509,7 @@ function eec(ind)
 	end
 
 	-- ignition
-	if cla < 1.7 then
+	if cla[ind] < 1.7 then
 		xdref["eng_igniter"][ind] = 0
 	elseif pdref["power"]["start_cmd"][ind] == 1 and pdref["power"]["start_sel"][0] > 1 then
 		-- starter inginition
@@ -528,7 +524,7 @@ function eec(ind)
 		else
 			xdref["eng_igniter"][ind] = 3
 		end
-	elseif eng_eec[ind] == 1 and cla > 25.7 and eng_autofeather[ind] == 0 and xdref["eng_nh"][ind] > 30 and xdref["eng_nh"][ind] < 60 then
+	elseif eng_eec[ind] == 1 and cla[ind] > 25.7 and eng_autofeather[ind] == 0 and xdref["eng_nh"][ind] > 30 and xdref["eng_nh"][ind] < 60 then
 		-- auto relight
 		xdref["eng_igniter"][ind] = 3
 	elseif pdref["power"]["man_ign"][0] == 1 then
@@ -556,15 +552,15 @@ function eec(ind)
 end
 
 
-function pbrake(pla, cla)
+function pbrake()
 	-- prop break ready
-	if weight_on_wheels == 2 and cla < 25.7 and pla <= 35 and xdref["hydraulic_pressure_blue"][0] > 2000 then
+	if weight_on_wheels == 2 and cla[1] < 25.7 and gust_lock == 1 and xdref["hydraulic_pressure_blue"][0] > 2000 then
 		pdref["power"]["prop_brake_ind"][1] = 1
 	else
 		pdref["power"]["prop_brake_ind"][1] = 0
 	end
 
-	if prop_brake > 0 and ( pla > 60 or xdref["hydraulic_pressure_blue"][0] < 1500 ) then
+	if prop_brake > 0 and ( pla[1] > 60 or xdref["hydraulic_pressure_blue"][0] < 1500 ) then
 		--prop is failing
 		if prop_brake == 1 or prop_brake == 2 then
 			xdref["hotel_mode"][0] = 0
@@ -572,12 +568,15 @@ function pbrake(pla, cla)
 		prop_brake = -1
 		pdref["power"]["prop_brake_ind"][0] = 1
 		pdref["power"]["prop_brake_ind"][2] = 0
+	elseif prop_brake > 0 and gust_lock == 0 then
+
+
 	end
 
 	if pdref["power"]["prop_brake_cmd"][0] == 1 then
-		--command to engage
+		-- command to engage
 		if pdref["power"]["prop_brake_ind"][1] == 1 then
-			--prop brake ready
+			-- prop brake ready
 			if prop_brake == 0 then
 				-- start engage
 				xdref["hotel_mode"][0] = 1
@@ -593,26 +592,32 @@ function pbrake(pla, cla)
 				pdref["power"]["prop_brake_ind"][2] = 1
 			end
 		else
-			--prop not ready
+			-- prop not ready
 			xdref["master_warning"][0] = 1
 		end
-	elseif prop_brake == 1 or prop_brake == 2 then
-		--stop prop brake engage / release prop brake
-		xdref["hotel_mode"][0] = 0
-		prop_brake_timer = os.clock()
-		prop_brake = 3
-		pdref["power"]["prop_brake_ind"][0] = 1
-	elseif prop_brake == 3 then
-		-- unlocking
-		if xdref["prop_speed"][1] > prop_speed_max * 0.2 then
-			-- unlocked
-			prop_brake_timer = 0
-			prop_brake = 0
-			pdref["power"]["prop_brake_ind"][0] = 0
-			pdref["power"]["prop_brake_ind"][2] = 0
+	elseif prop_brake > 0 then
+		-- command to disengage
+		if pdref["power"]["prop_brake_ind"][1] == 1 then
+			-- prop brake ready
+			if prop_brake == 1 or prop_brake == 2 then
+				-- stop prop brake engage / release prop brake
+				xdref["hotel_mode"][0] = 0
+				prop_brake_timer = os.clock()
+				prop_brake = 3
+				pdref["power"]["prop_brake_ind"][0] = 1
+			elseif prop_brake == 3 and xdref["prop_speed"][1] > prop_speed_max * 0.2 then
+				-- unlocked
+				prop_brake_timer = 0
+				prop_brake = 0
+				pdref["power"]["prop_brake_ind"][0] = 0
+				pdref["power"]["prop_brake_ind"][2] = 0
+			end
+		else
+			-- prop not ready
+			xdref["master_warning"][0] = 1
 		end
 	else
-		-- prop brake off
+		-- prop brake default off
 		prop_brake = 0
 		prop_brake_timer = 0
 		pdref["power"]["prop_brake_ind"][0] = 0
@@ -628,7 +633,7 @@ end
 
 function atpcs()
 	--ATPCS test/arming/disarming conditions
-	if pdref["power"]["atpcs_test"][0] ~= 0 and pdref["power"]["atpcs_cmd"][0] == 1 and pdref["power"]["pec_cmd"][0] == 1 and pdref["power"]["pec_cmd"][1] == 1 and round(cl[0] * 63, 1) < 1.7 and round(cl[1] * 63, 1) < 1.7 and math.abs(round(pl[0] * 100, 1) - 13) < 1 and math.abs(round(pl[1] * 100, 1) - 13) < 1 then
+	if pdref["power"]["atpcs_test"][0] ~= 0 and pdref["power"]["atpcs_cmd"][0] == 1 and pdref["power"]["pec_cmd"][0] == 1 and pdref["power"]["pec_cmd"][1] == 1 and cla[0] < 1.7 and cla[1] < 1.7 and math.abs(pla[0] - 13) < 1 and math.abs(pla[1] - 13) < 1 then
 		--ATPCS test
 		if pdref["power"]["atpcs_test"][0] == -1 then
 			pdref["power"]["atpcs_ind"][0] = 1
@@ -656,7 +661,7 @@ function atpcs()
 			end
 		end
 		return
-	elseif pdref["power"]["atpcs_cmd"][0] == 1 and pdref["power"]["pwr_mgmt"][0] == 0 and pdref["power"]["pwr_mgmt"][1] == 0 and eng_autofeather[0] ~= 2 and eng_autofeather[1] ~= 2 and round(pdref["power"]["pl"][0] * 100, 1) > 49 and round(pdref["power"]["pl"][1] * 100, 1) > 49 then
+	elseif pdref["power"]["atpcs_cmd"][0] == 1 and pdref["power"]["pwr_mgmt"][0] == 0 and pdref["power"]["pwr_mgmt"][1] == 0 and eng_autofeather[0] ~= 2 and eng_autofeather[1] ~= 2 and pla[0] > 49 and pla[1] > 49 then
 		if xdref["eng_torque"][0] > eng_torque_max * 0.46 and xdref["eng_torque"][1] > eng_torque_max * 0.46 then
 			--arming conditions met
 			if weight_on_wheels > 0 then
@@ -772,15 +777,32 @@ function gate_lock()
 	-- gust lock position
 	gust_lock = pdref["power"]["gust_lock_cmd"][0]
 
+	-- idle gate manual override
+	if idle_gate == 0 and pdref["power"]["idle_gate_cmd"][0] == 1 and ( pla[0] < 40 or pla[1] < 40 ) then
+		-- idle gate could not be pushed bellow 40deg PLA
+		pdref["power"]["idle_gate_cmd"][0] = 0
+	end
+
 	-- idle gate automatic position
 	if weight_on_wheels ~= weight_on_wheels_last then
-		if weight_on_wheels == 0 then
+		if idle_gate == 0 and weight_on_wheels == 0 and ( pla[0] >= 40 or pla[1] >= 40 ) then
+			-- push idle gate
 			pdref["power"]["idle_gate_cmd"][0] = 1
-		else
+		elseif idle_gate == 1 and weight_on_wheels ~= 0 then
+			-- pull idle gate
 			pdref["power"]["idle_gate_cmd"][0] = 0
 		end
 	end
+
 	idle_gate = pdref["power"]["idle_gate_cmd"][0]
+
+	-- idle gate warning
+	if ( weight_on_wheels == 0 and idle_gate == 0 ) or ( weight_on_wheels == 2 and idle_gate == 1 ) then
+		pdref["power"]["idle_gate_ind"][0] = 1
+		xdref["master_caution"][0] = 1
+	else
+		pdref["power"]["idle_gate_ind"][0] = 0
+	end
 end
 
 
@@ -791,17 +813,20 @@ function power()
 	-- idle gate and gust lock function
 	gate_lock()
 
-	--atpcs function
+	-- atpcs function
 	atpcs()
 
-	--prop synchrophazer function
+	-- prop synchrophazer function
 	sync()
 
-	--eec functions
+	-- eec functions
 	eec(0)
 	eec(1)
 
-	--itt function
+	-- prop brake
+	pbrake()
+
+	-- itt function
 	itt(0)
 	itt(1)
 end
