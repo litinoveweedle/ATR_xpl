@@ -1,5 +1,5 @@
 --- ATR72_orig_xpl1141.acf	2020-05-07 01:54:58.132899752 +0200
-+++ ATR72.acf	2020-05-07 00:24:08.224038717 +0200
++++ ATR72.acf	2020-05-24 01:35:05.450498096 +0200
 @@ -140,15 +140,15 @@
  P _engn/0/_exhaust_os_xyz/1 -0.300000012
  P _engn/0/_exhaust_os_xyz/2 3.0
@@ -19,38 +19,13 @@
  P _engn/count 8
  P _gear/0/_axiE 0.0
  P _gear/0/_axiN 0.0
-@@ -174,7 +174,7 @@
- P _gear/0/_lonN 0.0
- P _gear/0/_lonR 90.0
- P _gear/0/_scon 16074.628906250
--P _gear/0/_stat_def 0.480366141
-+P _gear/0/_stat_def 0.480366200
- P _gear/0/_steerdeg_hispeed 5.0
- P _gear/0/_steerdeg_lospeed 60.0
- P _gear/0/_strut_comp 0.0
-@@ -208,7 +208,7 @@
- P _gear/1/_lonN 0.0
- P _gear/1/_lonR 0.0
- P _gear/1/_scon 25719.406250000
--P _gear/1/_stat_def 0.814238548
-+P _gear/1/_stat_def 0.814238608
- P _gear/1/_steerdeg_hispeed 0.0
- P _gear/1/_steerdeg_lospeed 0.0
- P _gear/1/_strut_comp 1.0
-@@ -242,7 +242,7 @@
- P _gear/2/_lonN 0.0
- P _gear/2/_lonR 0.0
- P _gear/2/_scon 25719.406250000
--P _gear/2/_stat_def 0.814238548
-+P _gear/2/_stat_def 0.814238608
- P _gear/2/_steerdeg_hispeed 0.0
- P _gear/2/_steerdeg_lospeed 0.0
- P _gear/2/_strut_comp 1.0
-@@ -28582,12 +28604,12 @@
+@@ -28581,13 +28603,13 @@
+ P _prop/0/_des_kts_acf 250.0
  P _prop/0/_des_rpm_prp 1200.0
  P _prop/0/_max_AOA_deg 90.0
- P _prop/0/_max_pitch 50.0
+-P _prop/0/_max_pitch 50.0
 -P _prop/0/_min_pitch 6.0
++P _prop/0/_max_pitch 55.0
 +P _prop/0/_min_pitch 14.0
  P _prop/0/_num_blades 6.0
  P _prop/0/_prop_clutch_EQ 0
@@ -61,16 +36,17 @@
  P _prop/0/_prop_type 1
  P _prop/0/_vectarmY_engn 0.0
  P _prop/0/_vectarmZ_engn 0.0
-@@ -28598,12 +28620,12 @@
+@@ -28597,13 +28619,13 @@
+ P _prop/1/_des_kts_acf 250.0
  P _prop/1/_des_rpm_prp 1200.0
  P _prop/1/_max_AOA_deg 90.0
- P _prop/1/_max_pitch 50.0
+-P _prop/1/_max_pitch 50.0
 -P _prop/1/_min_pitch 6.0
++P _prop/1/_max_pitch 55.0
 +P _prop/1/_min_pitch 14.0
  P _prop/1/_num_blades 6.0
  P _prop/1/_prop_clutch_EQ 0
--P _prop/1/_prop_dir -1.0
-+P _prop/1/_prop_dir 1.0
+ P _prop/1/_prop_dir -1.0
  P _prop/1/_prop_ducted 0
 -P _prop/1/_prop_gear_rat 10.0
 +P _prop/1/_prop_gear_rat 16.666000366
@@ -100,6 +76,15 @@
  P acf/_SFC_ROC 0.0
  P acf/_SFC_alt_hi_JET 0.0
  P acf/_SFC_alt_hi_PRP 10000.0
+@@ -33035,7 +33058,7 @@
+ P acf/_auto_sync_EQ 0
+ P acf/_auto_trim_EQ 0
+ P acf/_autopilot_logic 0
+-P acf/_average_mac_acf 7.747435570
++P acf/_average_mac_acf 7.752159595
+ P acf/_bagg_1/0 0.0
+ P acf/_bagg_1/1 0.0
+ P acf/_bagg_1/2 0.0
 @@ -33070,8 +33093,8 @@
  P acf/_battery_watt_hr_max 1032.0
  P acf/_beacon_EQ 1
@@ -111,74 +96,6 @@
  P acf/_blown_flap_cl_inc 0.0
  P acf/_blown_flap_min_engag 0.0
  P acf/_board_1/0 0.0
-@@ -34152,8 +34175,8 @@
- P acf/_esys_amperage/215 0.0
- P acf/_esys_amperage/30 1.0
- P acf/_esys_amperage/31 1.0
--P acf/_esys_amperage/32 1.0
--P acf/_esys_amperage/33 1.0
-+P acf/_esys_amperage/32 0.0
-+P acf/_esys_amperage/33 0.0
- P acf/_esys_amperage/34 0.0
- P acf/_esys_amperage/35 0.0
- P acf/_esys_amperage/36 0.0
-@@ -34194,8 +34217,8 @@
- P acf/_esys_amperage/rel_bad_fuel 0.0
- P acf/_esys_amperage/rel_bus0 1.0
- P acf/_esys_amperage/rel_bus1 1.0
--P acf/_esys_amperage/rel_bus2 1.0
--P acf/_esys_amperage/rel_bus3 1.0
-+P acf/_esys_amperage/rel_bus2 0.0
-+P acf/_esys_amperage/rel_bus3 0.0
- P acf/_esys_amperage/rel_bus4 0.0
- P acf/_esys_amperage/rel_bus5 0.0
- P acf/_esys_amperage/rel_cop_tsi 0.0
-@@ -34331,16 +34354,16 @@
- P acf/_esys_bus_bit_add/215 0
- P acf/_esys_bus_bit_add/30 1
- P acf/_esys_bus_bit_add/31 2
--P acf/_esys_bus_bit_add/32 4
--P acf/_esys_bus_bit_add/33 8
--P acf/_esys_bus_bit_add/34 16
--P acf/_esys_bus_bit_add/35 32
-+P acf/_esys_bus_bit_add/32 0
-+P acf/_esys_bus_bit_add/33 0
-+P acf/_esys_bus_bit_add/34 0
-+P acf/_esys_bus_bit_add/35 0
- P acf/_esys_bus_bit_add/36 1
- P acf/_esys_bus_bit_add/37 2
- P acf/_esys_bus_bit_add/38 1
- P acf/_esys_bus_bit_add/42 0
- P acf/_esys_bus_bit_add/48 0
--P acf/_esys_bus_bit_add/492 63
-+P acf/_esys_bus_bit_add/492 3
- P acf/_esys_bus_bit_add/493 0
- P acf/_esys_bus_bit_add/51 1
- P acf/_esys_bus_bit_add/52 1
-@@ -34373,10 +34396,10 @@
- P acf/_esys_bus_bit_add/rel_bad_fuel 0
- P acf/_esys_bus_bit_add/rel_bus0 1
- P acf/_esys_bus_bit_add/rel_bus1 2
--P acf/_esys_bus_bit_add/rel_bus2 4
--P acf/_esys_bus_bit_add/rel_bus3 8
--P acf/_esys_bus_bit_add/rel_bus4 16
--P acf/_esys_bus_bit_add/rel_bus5 32
-+P acf/_esys_bus_bit_add/rel_bus2 0
-+P acf/_esys_bus_bit_add/rel_bus3 0
-+P acf/_esys_bus_bit_add/rel_bus4 0
-+P acf/_esys_bus_bit_add/rel_bus5 0
- P acf/_esys_bus_bit_add/rel_cop_tsi 0
- P acf/_esys_bus_bit_add/rel_dice_AOA_heat_0 2
- P acf/_esys_bus_bit_add/rel_dice_AOA_heat_1 2
-@@ -34414,7 +34437,7 @@
- P acf/_esys_bus_bit_add/rel_g_gia2 1
- P acf/_esys_bus_bit_add/rel_g_magmtr 1
- P acf/_esys_bus_bit_add/rel_gear_act 2
--P acf/_esys_bus_bit_add/rel_gen_esys 63
-+P acf/_esys_bus_bit_add/rel_gen_esys 3
- P acf/_esys_bus_bit_add/rel_gps1 1
- P acf/_esys_bus_bit_add/rel_gps2 1
- P acf/_esys_bus_bit_add/rel_heatIN0 2
 @@ -34470,20 +34493,20 @@
  P acf/_esys_bus_bit_add/rel_startr7 0
  P acf/_esys_bus_bit_add/rel_xpndr 1
@@ -204,6 +121,15 @@
  P acf/_feathered_pitch 78.500000000
  P acf/_ff_rat_idle_JET 0.0
  P acf/_ff_rat_idle_PRP 0.100000001
+@@ -34590,7 +34613,7 @@
+ P acf/_fuel_2/2 0.0
+ P acf/_fuel_2/count 3
+ P acf/_fuel_intro_time_jet 0.100000001
+-P acf/_fuel_intro_time_prop 10.0
++P acf/_fuel_intro_time_prop 12.0
+ P acf/_gear_EQ 1
+ P acf/_gear_can_ret_on_ground 0
+ P acf/_gear_extend_protect 0
 @@ -34714,7 +34737,7 @@
  P acf/_hoops_hud_EQ 0
  P acf/_hud_tapes_track_vector 0
@@ -242,7 +168,16 @@
  P acf/_max_MP_limit 45.0
  P acf/_max_bat_amp 300.0
  P acf/_max_gen_amp0 400.0
-@@ -34943,12 +34966,12 @@
+@@ -34819,7 +34842,7 @@
+ P acf/_max_gen_amp_per_gen/count 8
+ P acf/_max_mach_eff 0.850000024
+ P acf/_max_oilT 140.0
+-P acf/_max_press_diff 6.500000000
++P acf/_max_press_diff 30.0
+ P acf/_max_vac 8.0
+ P acf/_max_xmsn_P 1.0
+ P acf/_max_xmsn_T 1.0
+@@ -34943,14 +34966,14 @@
  P acf/_phase_ptch_tvect_in_at_90 0
  P acf/_phase_roll_tvect_in_at_00 0
  P acf/_phase_roll_tvect_in_at_90 0
@@ -254,16 +189,19 @@
  P acf/_pitch_cyc_with_v2_deg 0.0
  P acf/_pitch_cyc_with_v2_kts 0.0
 -P acf/_power_max_limit 2750.0
-+P acf/_power_max_limit 3200.0
++P acf/_power_max_limit 3600.0
  P acf/_prim_is_epr 0
- P acf/_prop_inlet_recovery 0.0
+-P acf/_prop_inlet_recovery 0.0
++P acf/_prop_inlet_recovery 0.899999976
  P acf/_prop_pitch_deg_per_sec 45.0
+ P acf/_prop_pitch_deg_per_sec_unfeather 45.0
+ P acf/_prop_x_ctr 0.0
 @@ -35184,7 +35207,7 @@
  P acf/_spoi2_with_grnd_pitch 0.0
  P acf/_spoi2_with_grnd_sbrk 0.0
  P acf/_spool_time_compressor_jet 1.0
 -P acf/_spool_time_compressor_prop 1.0
-+P acf/_spool_time_compressor_prop 1.100000024
++P acf/_spool_time_compressor_prop 5.0
  P acf/_spot1_3d_rgb/0 0.899999976
  P acf/_spot1_3d_rgb/1 0.899999976
  P acf/_spot1_3d_rgb/2 0.0
@@ -301,4 +239,3 @@
  P acf/_truck_lat_sep 3.0
  P acf/_truck_lon_sep 3.0
  P acf/_tvec_hdng 0.0
- 
