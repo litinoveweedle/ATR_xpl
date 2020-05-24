@@ -102,27 +102,87 @@ pdref["power"]["pec_ind"] = create_dataref_table("atr/power/pec_ind", "IntArray"
 pdref["power"]["pec_ind"][0] = 0
 pdref["power"]["pec_ind"][1] = 0
 
+-- NL turbine RPM perc
 pdref["power"]["eng_nl"] = create_dataref_table("atr/power/nl_perc", "FloatArray")
 pdref["power"]["eng_nl"][0] = 0
 pdref["power"]["eng_nl"][1] = 0
+
+-- engine torque
+pdref["power"]["eng_tq"] = create_dataref_table("atr/power/tq_perc", "FloatArray")
+pdref["power"]["eng_tq"][0] = 0
+pdref["power"]["eng_tq"][1] = 0
 
 --corrected ITT
 pdref["power"]["eng_itt"] = create_dataref_table("atr/power/eng_itt", "FloatArray")
 pdref["power"]["eng_itt"][0] = 0
 pdref["power"]["eng_itt"][1] = 0
 
--- eng bleed switch and annunciator
-pdref["air"]["bleed_cmd"] = create_dataref_table("atr/air/bleed_cmd", "IntArray")
-pdref["air"]["bleed_cmd"][0] = 1
-pdref["air"]["bleed_cmd"][1] = 0
-pdref["air"]["bleed_ind"] = create_dataref_table("atr/air/bleed_ind", "IntArray")
-pdref["air"]["bleed_ind"][0] = 0
-pdref["air"]["bleed_ind"][1] = 0
+--fire handle
+pdref["power"]["fire_handle"] = create_dataref_table("atr/power/fire_handle", "IntArray")
+pdref["power"]["fire_handle"][0] = 0
+pdref["power"]["fire_handle"][1] = 0
+
+-- eng bleed valve switch and indicator
+pdref["air"]["bleed_valve_cmd"] = create_dataref_table("atr/air/bleed_valve_cmd", "IntArray")
+pdref["air"]["bleed_valve_cmd"][0] = 0
+pdref["air"]["bleed_valve_cmd"][1] = 0
+pdref["air"]["bleed_valve_ind"] = create_dataref_table("atr/air/bleed_valve_ind", "IntArray")
+pdref["air"]["bleed_valve_ind"][0] = 0
+pdref["air"]["bleed_valve_ind"][1] = 0
+
+-- pack valve switch and indicator
+pdref["air"]["pack_valve_cmd"] = create_dataref_table("atr/air/pack_valve_cmd", "IntArray")
+pdref["air"]["pack_valve_cmd"][0] = 0
+pdref["air"]["pack_valve_cmd"][1] = 0
+pdref["air"]["pack_valve_ind"] = create_dataref_table("atr/air/pack_valve_ind", "IntArray")
+pdref["air"]["pack_valve_ind"][0] = 0
+pdref["air"]["pack_valve_ind"][1] = 0
+
+-- cross feed valve indicator
+pdref["air"]["cross_valve_ind"] = create_dataref_table("atr/air/cross_valve_ind", "Int")
+pdref["air"]["cross_valve_ind"][0] = 0
+
 -- pack valve flow switch and indicator
 pdref["air"]["pack_flow_cmd"] = create_dataref_table("atr/air/pack_flow_cmd", "Int")
 pdref["air"]["pack_flow_cmd"][0] = 0
 pdref["air"]["pack_flow_ind"] = create_dataref_table("atr/air/pack_flow_ind", "Int")
 pdref["air"]["pack_flow_ind"][0] = 0
+
+-- cabin pressurization mode switch and indicator
+pdref["air"]["press_mode_cmd"] = create_dataref_table("atr/air/press_mode_cmd", "Int")
+pdref["air"]["press_mode_cmd"][0] = 0
+pdref["air"]["press_mode_ind"] = create_dataref_table("atr/air/press_mode_ind", "Int")
+pdref["air"]["press_mode_ind"][0] = 0
+
+-- cabin pressurization mode switch, test pushbutton and indicator
+pdref["air"]["test_elev_cmd"] = create_dataref_table("atr/air/test_elev_cmd", "Int")
+pdref["air"]["test_elev_cmd"][0] = 0
+pdref["air"]["landing_elev_cmd"] = create_dataref_table("atr/air/landing_elev_cmd", "Int")
+pdref["air"]["landing_elev_cmd"][0] = 0
+pdref["air"]["landing_elev_ind"] = create_dataref_table("atr/air/landing_elev_ind", "Int")
+pdref["air"]["landing_elev_ind"][0] = 0
+
+-- cabin pressurization dump switch
+pdref["air"]["press_dump_cmd"] = create_dataref_table("atr/air/press_dump_cmd", "Int")
+pdref["air"]["press_dump_cmd"][0] = 0
+pdref["air"]["press_dump_ind"] = create_dataref_table("atr/air/press_dump_ind", "Int")
+pdref["air"]["press_dump_ind"][0] = 0
+
+-- cabin pressurization fast descent rate
+pdref["air"]["press_fast_cmd"] = create_dataref_table("atr/air/press_fast_cmd", "Int")
+pdref["air"]["press_fast_cmd"][0] = 0
+pdref["air"]["press_fast_ind"] = create_dataref_table("atr/air/press_fast_ind", "Int")
+pdref["air"]["press_fast_ind"][0] = 0
+
+-- cabin pressurization ditch switch and indicator
+pdref["air"]["press_ditch_cmd"] = create_dataref_table("atr/air/press_ditch_cmd", "Int")
+pdref["air"]["press_ditch_cmd"][0] = 0
+pdref["air"]["press_ditch_ind"] = create_dataref_table("atr/air/press_ditch_ind", "Int")
+pdref["air"]["press_ditch_ind"][0] = 0
+
+-- cabin pressurization manual descent rate 
+pdref["air"]["press_rate_cmd"] = create_dataref_table("atr/air/press_rate_cmd", "Int")
+pdref["air"]["press_rate_cmd"][0] = 0
 
 
 
@@ -216,14 +276,19 @@ xdref["eng_np"] = dataref_table("sim/cockpit2/engine/indicators/N2_percent")
 xdref["eng_itt"] = dataref_table("sim/flightmodel2/engines/ITT_deg_C")
 xdref["eng_itt_corr"] = dataref_table("sim/flightmodel/engine/ENGN_ITT_c")
 
+-- engine Fuel Flow
+xdref["eng_ff"] = dataref_table("sim/flightmodel/engine/ENGN_FF_")
+
 -- engine igniters
 xdref["eng_igniter"] = dataref_table("sim/cockpit2/engine/actuators/igniter_on")
 
--- engine bleed air
-xdref["eng_bleed_val"] = dataref_table("sim/cockpit2/bleedair/actuators/engine_bleed_sov")
+-- engine comressor air extraction valve
+xdref["eng_airextr_val"] = dataref_table("sim/cockpit2/bleedair/actuators/engine_bleed_sov")
+
+-- engine loss from bleed air
+xdref["eng_bleed_loss"] = dataref_table("sim/cockpit2/bleedair/indicators/engine_loss_from_bleed_air_ratio")
 
 xdref["eng_n2"] = dataref_table("sim/cockpit2/engine/indicators/N2_percent")
-
 
 -- hotel mode prop brake stop ratio
 xdref["hotel_mode"] = dataref_table("sim/cockpit2/switches/hotel_mode")
@@ -257,9 +322,16 @@ xdref["alt2"] = dataref_table("sim/cockpit2/gauges/indicators/altitude_ft_copilo
 -- pressurization packs, off or on
 xdref["pack_valve"] = { [0] = dataref_table("sim/cockpit2/bleedair/actuators/pack_left"), [1] = dataref_table("sim/cockpit2/bleedair/actuators/pack_right") }
 
-xdref["duct_press_center"] = dataref_table("sim/cockpit2/bleedair/indicators/bleed_available_center")
-xdref["duct_press_left"] = dataref_table("sim/cockpit2/bleedair/indicators/bleed_available_left")
-xdref["duct_press_right"] = dataref_table("sim/cockpit2/bleedair/indicators/bleed_available_right")
+-- ducts isolation valves, off or on
+xdref["isol_valve"] = { [0] = dataref_table("sim/cockpit2/bleedair/actuators/isol_valve_left"), [1] = dataref_table("sim/cockpit2/bleedair/actuators/isol_valve_right") }
 
-xdref["duct_left_val"] = dataref_table("sim/cockpit2/bleedair/actuators/isol_valve_left")
-xdref["duct_right_val"] = dataref_table("sim/cockpit2/bleedair/actuators/isol_valve_right")
+-- pressurization outflow valve
+xdref["outflow_valve"] = dataref_table("sim/cockpit/pressure/outflow_valve")
+
+-- cabin altitude
+xdref["cabin_alt_ind"] = dataref_table("sim/cockpit2/pressurization/indicators/cabin_altitude_ft")
+xdref["cabin_alt_cmd"] = dataref_table("sim/cockpit2/pressurization/actuators/cabin_altitude_ft")
+
+-- cabin rate
+xdref["cabin_rate_ind"] = dataref_table("sim/cockpit2/pressurization/indicators/cabin_vvi_fpm")
+xdref["cabin_rate_cmd"] = dataref_table("sim/cockpit2/pressurization/actuators/cabin_vvi_fpm")
