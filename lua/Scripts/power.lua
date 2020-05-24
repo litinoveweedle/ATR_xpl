@@ -772,8 +772,18 @@ function sync()
 end
 
 
-function itt(ind)
-	pdref["power"]["eng_itt"][ind] = xdref["eng_itt"][ind] * ( 0.6867 + ( xdref["eng_itt"][ind] * 0.000148 ) )
+function engine(ind)
+	-- ITT calculation
+	--pdref["power"]["eng_itt"][ind] = xdref["sat"][0] + ( 29.92 * xdref["eng_ff"][ind] / ( xdref["eng_nh"][ind] * xdref["eng_nh"][ind] * xdref["air_pressure"][0] ) )
+
+	-- torque indicator
+	if xdref["prop_pitch"][ind] > 55 then
+		eng_tq_gain[ind]["in"] = 0
+	else
+		eng_tq_gain[ind]["in"] = ( xdref["eng_torque"][ind] / eng_torque_max ) * 100
+	end
+	gain.run(eng_tq_gain[ind])
+	pdref["power"]["eng_tq"][ind] = eng_tq_gain[ind]["out"]
 end
 
 
@@ -845,9 +855,9 @@ function power()
 	-- prop brake
 	pbrake()
 
-	-- itt function
-	itt(0)
-	itt(1)
+	-- engine simulation
+	engine(0)
+	engine(1)
 end
 
 
