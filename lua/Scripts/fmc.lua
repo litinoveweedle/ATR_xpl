@@ -11,6 +11,7 @@ end
 function dadc()
     pdref["dadc"]["palt"][0] = (1 - math.pow((xdref["air_pressure"][0]/29.92), 0.190284)) * 145366.45;
     pdref["dadc"]["sat"][0] = xdref["sat"][0]
+    pdref["dadc"]["tat"][0] = xdref["sat"][0] + ( xdref["sat"][0] * 0.2 * xdref["mach1"][0] * xdref["mach1"][0] )
     
     if pdref["dadc"]["adc_cmd"] == 0 then
 		pdref["dadc"]["ias"][0] = xdref["ias1"][0]

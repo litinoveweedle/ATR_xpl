@@ -12,8 +12,8 @@ pdref = {
 
 -- power levers
 pdref["power"]["pl"] = create_dataref_table("atr/power/pl", "FloatArray")
-pdref["power"]["pl"][0] = 0.145
-pdref["power"]["pl"][1] = 0.145
+pdref["power"]["pl"][0] = 0.15
+pdref["power"]["pl"][1] = 0.15
 
 -- condition levers
 pdref["power"]["cl"] = create_dataref_table("atr/power/cl", "FloatArray")
@@ -118,10 +118,12 @@ pdref["air"]["bleed_cmd"][1] = 0
 pdref["air"]["bleed_ind"] = create_dataref_table("atr/air/bleed_ind", "IntArray")
 pdref["air"]["bleed_ind"][0] = 0
 pdref["air"]["bleed_ind"][1] = 0
+-- pack valve flow switch and indicator
+pdref["air"]["pack_flow_cmd"] = create_dataref_table("atr/air/pack_flow_cmd", "Int")
+pdref["air"]["pack_flow_cmd"][0] = 0
+pdref["air"]["pack_flow_ind"] = create_dataref_table("atr/air/pack_flow_ind", "Int")
+pdref["air"]["pack_flow_ind"][0] = 0
 
-pdref["air"]["ac_mode"] = create_dataref_table("atr/air/ac_mode", "IntArray")
-pdref["air"]["ac_mode"][0] = 0
-pdref["air"]["ac_mode"][1] = 0
 
 
 pdref["ccas"]["ccas_ind"] = create_dataref_table("atr/ccas/anuciators", "IntArray")
@@ -148,6 +150,9 @@ pdref["dadc"]["palt"][0] = 0
 
 pdref["dadc"]["sat"] = create_dataref_table("atr/dadc/sat", "Float")
 pdref["dadc"]["sat"][0] = 0
+
+pdref["dadc"]["tat"] = create_dataref_table("atr/dadc/tat", "Float")
+pdref["dadc"]["tat"][0] = 0
 
 
 
@@ -184,6 +189,9 @@ xdref["prop_feather"] = dataref_table("sim/cockpit2/engine/actuators/manual_feat
 
 --prop sync switch
 xdref["prop_sync"] = dataref_table("sim/cockpit2/switches/prop_sync_on")
+
+--prop gear ratio
+xdref["prop_gear_rat"] = dataref_table("sim/aircraft/prop/acf_prop_gear_rat")
 
 -- only 0 - shut off, 0.5 - low idle , 1 - high idle
 xdref["eng_mixture"] = dataref_table("sim/flightmodel/engine/ENGN_mixt")
@@ -229,6 +237,10 @@ xdref["air_pressure"] = dataref_table("sim/weather/barometer_current_inhg")
 -- air temperature outside the aircraft (at altitude)
 xdref["sat"] = dataref_table("sim/cockpit2/temperature/outside_air_temp_degc")
 
+-- speed in mach number
+xdref["mach1"] = dataref_table("sim/cockpit2/gauges/indicators/mach_pilot")
+xdref["mach2"] = dataref_table("sim/cockpit2/gauges/indicators/mach_copilot")
+
 -- indicated air speed
 xdref["ias1"] = dataref_table("sim/cockpit2/gauges/indicators/airspeed_kts_pilot")
 xdref["ias2"] = dataref_table("sim/cockpit2/gauges/indicators/airspeed_kts_copilot")
@@ -243,8 +255,7 @@ xdref["alt2"] = dataref_table("sim/cockpit2/gauges/indicators/altitude_ft_copilo
 
 
 -- pressurization packs, off or on
-xdref["pack_left"] = dataref_table("sim/cockpit2/bleedair/actuators/pack_left")
-xdref["pack_right"] = dataref_table("sim/cockpit2/bleedair/actuators/pack_right")
+xdref["pack_valve"] = { [0] = dataref_table("sim/cockpit2/bleedair/actuators/pack_left"), [1] = dataref_table("sim/cockpit2/bleedair/actuators/pack_right") }
 
 xdref["duct_press_center"] = dataref_table("sim/cockpit2/bleedair/indicators/bleed_available_center")
 xdref["duct_press_left"] = dataref_table("sim/cockpit2/bleedair/indicators/bleed_available_left")
