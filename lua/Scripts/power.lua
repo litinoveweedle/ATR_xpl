@@ -298,20 +298,21 @@ function eec(ind)
 				prop_apcs_timer[ind] = 0
 			end
 		end
+		-- propeller transition speeds
+		if pla[ind] < 13 then
+			-- reverse prop speed
+			-- temp_prop_speed = ( prop_speed_max * 0.91 )
+			temp_prop_speed = ( prop_speed_max * 0.91 ) - ( ( ( prop_speed_max * 0.202 ) / 13 ) * pla[ind] )
+		elseif pla[ind] < 31 then
+			-- prop speed underspeed control
+			temp_prop_speed = prop_speed_max * 0.708
+		elseif pla[ind] < 52 then
+			-- prop speed transition mode
+			temp_prop_speed = ( prop_speed_max * 0.708 ) + ( ( ( temp_prop_speed - ( prop_speed_max * 0.708 ) ) / 21 ) * ( pla[ind] - 31 ) )
+		end
 	else
 		--PEC off
 		temp_prop_speed = prop_speed_max
-	end
-	if pla[ind] < 13 then
-		-- reverse prop speed
-		-- temp_prop_speed = ( prop_speed_max * 0.91 )
-		temp_prop_speed = ( prop_speed_max * 0.91 ) - ( ( ( prop_speed_max * 0.202 ) / 13 ) * pla[ind] )
-	elseif pla[ind] < 31 then
-		-- prop speed underspeed control
-		temp_prop_speed = prop_speed_max * 0.708
-	elseif pla[ind] < 52 then
-		-- prop speed transition mode
-		temp_prop_speed = ( prop_speed_max * 0.708 ) + ( ( ( temp_prop_speed - ( prop_speed_max * 0.708 ) ) / 21 ) * ( pla[ind] - 31 ) )
 	end
 
 	--PVM
