@@ -316,7 +316,7 @@ function eec(ind)
 	end
 
 	--PVM
-	if cla[ind] < 1.7 then
+	if cla[ind] < 1.7 and xdref["eng_power"][ind] < eng_power_max * 0.05 then
 		-- shutoff
 		temp_prop_mode = 0
 		temp_eng_mixture = 0
@@ -328,13 +328,13 @@ function eec(ind)
 		temp_eng_mixture = 0.5
 		temp_prop_feather = 1
 		temp_prop_pitch = 78.5
-	elseif xdref["prop_feather"][ind] == 1 and xdref["eng_power"][ind] < eng_power_max * 0.001 then
+	elseif xdref["prop_feather"][ind] == 1 and xdref["eng_power"][ind] < eng_power_max * 0.01 then
 		-- keep feathered
 		temp_prop_mode = 0
 		temp_eng_mixture = 1
 		temp_prop_feather = 1
 		temp_prop_pitch = 78.5
-	elseif pla[ind] < 13 then
+	elseif pla[ind] < 13 and xdref["eng_power"][ind] < eng_power_max * 0.075 then
 		-- reverse
 		temp_prop_mode = 3
 		temp_eng_mixture = 1
@@ -343,7 +343,7 @@ function eec(ind)
 		--limit prop pitch rate
 		gain.run(prop_pitch_gain[ind])
 		temp_prop_pitch = prop_pitch_gain[ind]["out"]
-	elseif pla[ind] < 31 then
+	elseif pla[ind] < 31 and xdref["eng_power"][ind] < eng_power_max * 0.15 then
 		-- ground beta
 		temp_prop_mode = 2
 		temp_eng_mixture = 0.5
