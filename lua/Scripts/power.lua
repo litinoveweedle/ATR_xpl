@@ -103,6 +103,9 @@ local eng_eec = { [0] = 1, [1] = 1 }
 -- last EEC commanded throttle
 local eng_throttle_last = { [0] = 0, [1] = 0 }
 
+-- PLA threshold for transition between HMU Blade Angle and Fuel Governing modes
+local pla_transfer = { [0] = 0, [1] = 0 }
+
 -- weight on wheels signal
 local weight_on_wheels = -1
 local weight_on_wheels_last = -1
@@ -146,8 +149,8 @@ local hmu_nhspeed_pid = {
 }
 -- controls NP by pitch at alpha
 local pvm_pitch_pid = {
-	[0] = { ["kp"] = -0.3, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 8, ["cv_max"] = 55, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 },
-	[1] = { ["kp"] = -0.3, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 8, ["cv_max"] = 55, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 }
+	[0] = { ["kp"] = -0.3, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 14, ["cv_max"] = 55, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 },
+	[1] = { ["kp"] = -0.3, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 14, ["cv_max"] = 55, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 }
 }
 -- controls NP by throttle at beta and reverse
 local eec_propspeed_pid = {
@@ -361,7 +364,7 @@ function eec(ind)
 		pvm_pitch_pid[ind]["cv"] = xdref["prop_pitch"][ind]
 		pvm_pitch_pid[ind]["pv"] = xdref["prop_speed"][ind]
 		pvm_pitch_pid[ind]["sp"] = temp_prop_speed
-		if xdref["eng_power"][ind] < eng_power_max * 0.001 then
+		if xdref["eng_power"][ind] < eng_power_max * 0.01 then
 			pvm_pitch_pid[ind]["ff"] = 1
 		else
 			pvm_pitch_pid[ind]["ff"] = ( ( xdref["eng_power"][ind] / temp_prop_speed ) ^ ( 1 / 2.8 ) )
@@ -413,7 +416,7 @@ function eec(ind)
 		end
 
 		-- HMU top law power calculation
-		if xdref["eng_power"][ind] > eng_power_max * 0.001 and cla[ind] > 33.7 and xdref["prop_feather"][ind] ~= 1 then
+		if xdref["eng_power"][ind] > eng_power_max * 0.01 and xdref["prop_feather"][ind] == 0 then
 			eng_power_ratio = eec_limit(pla[ind], pwr_mgmt, pack_flow)
 		end
 	else
@@ -421,46 +424,46 @@ function eec(ind)
 		pdref["power"]["eec_fdau"][ind] = 0
 	end
 
-	if pla[ind] < 31 then
-		-- fuel governing - keep constant Np
-		eec_propspeed_pid[ind]["cv"] = xdref["eng_throttle"][ind]
-		eec_propspeed_pid[ind]["pv"] = xdref["prop_speed"][ind]
-		eec_propspeed_pid[ind]["sp"] = temp_prop_speed
-		eec_propspeed_pid[ind]["ff"] = 0.25 + ( temp_prop_speed * 0.005 * math.sin(math.rad(math.abs(temp_prop_pitch))) )
-		pid.run(eec_propspeed_pid[ind])
-		temp_eng_throttle = eec_propspeed_pid[ind]["cv"]
-		-- reset EEC frozen (as bellow 52 PLA)
-		eng_throttle_last[ind] = 0
-	else
-		-- HMU top law / HMU base law
-		-- get requested engine power for HMU top law
-		local eng_power = eng_power_ratio * eng_power_max
+	if eng_power_ratio ~= 0 then
+		-- HMU top law
+		-- get requested EEC engine power for HMU top law
+		eng_power = eng_power_ratio * eng_power_max
 
-		-- get requested engine NH for HMU base law
-		local eng_nh_ratio = curve.lookup(pla[ind], base_pla)
-
-		-- TODO find better transition function between HMU modes
-		if eng_power == 0 then
-			if pla[ind] <= 52 and eng_throttle_last[ind] ~= 0 then
-				-- frozen EEC reversion to HMU base law
-				eng_throttle_last[ind] = 0
+		local mode
+		-- mode transition logic
+		if pla[ind] > 52 then
+			-- Fuel Governing mode - constant NP
+			pla_transfer[ind] = pla[ind]
+			mode = 1
+		elseif pla[ind] < 31 and xdref["eng_power"][ind] < eng_power_max * 0.15 then
+			-- Blade Angle Governing mode - constant TQ
+			pla_transfer[ind] = pla[ind]
+			mode = 0
+		elseif eec_propspeed_pid[ind]["t"] ~= nil and ( eec_power_pid[ind]["t"] == nil or eec_propspeed_pid[ind]["t"] > eec_power_pid[ind]["t"] ) then
+			if pla[ind] > 31 and pla[ind] > pla_transfer[ind] and eng_power > xdref["eng_power"][ind] then
+				-- transition to Blade Angle Governing mode - constant TQ
+				pla_transfer[ind] = pla[ind]
+				mode = 1
+			else
+				mode = 0
+				if pla[ind] < pla_transfer[ind] then
+					pla_transfer = pla[ind]
+				end
 			end
-		elseif eng_throttle_last[ind] ~= 0 then
-			if pla[ind] < 52 and eng_nh_ratio >= xdref["eng_nh"][ind] then
-				-- transition to HMU base law
-				eng_power = 0
-				eng_throttle_last[ind] = 0
+		elseif eec_power_pid[ind]["t"] ~= nil and ( eec_propspeed_pid[ind]["t"] == nil or eec_power_pid[ind]["t"] > eec_propspeed_pid[ind]["t"] ) then
+			if pla[ind] < 52 and pla[ind] < pla_transfer[ind] and xdref["eng_power"][ind] < eng_power_max * 0.15 and temp_prop_pitch == prop_beta["alpha"] then
+				-- transition to Fuel Governing mode - constant NP
+				pla_transfer[ind] = pla[ind]
+				mode = 0
+			else
+				mode = 1
+				if pla[ind] > pla_transfer[ind] then
+					pla_transfer[ind] = pla[ind]
+				end
 			end
-		elseif pla[ind] > 52 or eng_power >= xdref["eng_power"][ind] then
-			-- transition to HMU top law
-			eng_throttle_last[ind] = 0
-		else
-			-- keep in HMU base law
-			eng_power = 0
 		end
 
-		if eng_power ~= 0 then
-			-- HMU top law
+		if mode == 1 then
 			-- PID to set engine throttle to produce FADEC commanded power
 			eec_power_pid[ind]["cv"] = xdref["eng_throttle"][ind]
 			eec_power_pid[ind]["pv"] = xdref["eng_power"][ind]
@@ -468,21 +471,38 @@ function eec(ind)
 			eec_power_pid[ind]["ff"] = 0.25 + ( eng_power_ratio / 1.4 )
 			pid.run(eec_power_pid[ind])
 			temp_eng_throttle = eec_power_pid[ind]["cv"]
-			-- keep last value for EEC off
-			eng_throttle_last[ind] = temp_eng_throttle
-		elseif eng_throttle_last[ind] == 0 then
-			-- HMU base law
-			-- PID to set engine throttle to produce NH
-			hmu_nhspeed_pid[ind]["cv"] = xdref["eng_throttle"][ind]
-			hmu_nhspeed_pid[ind]["pv"] = xdref["eng_nh"][ind]
-			hmu_nhspeed_pid[ind]["sp"] = eng_nh_ratio
-			--hmu_nhspeed_pid[ind]["ff"] = ( eng_nh_ratio - 70 ) * 30
-			pid.run(hmu_nhspeed_pid[ind])
-			temp_eng_throttle = hmu_nhspeed_pid[ind]["cv"]
+			if pla[ind] > 52 then
+				-- keep last value for EEC off
+				eng_throttle_last[ind] = temp_eng_throttle
+			else
+				-- reset EEC frozen (as bellow 52 PLA)
+				eng_throttle_last[ind] = 0
+			end
 		else
-			-- EEC frozen
-			temp_eng_throttle = eng_throttle_last[ind]
+			-- PID to set engine throttle to keep given Np
+			eec_propspeed_pid[ind]["cv"] = xdref["eng_throttle"][ind]
+			eec_propspeed_pid[ind]["pv"] = xdref["prop_speed"][ind]
+			eec_propspeed_pid[ind]["sp"] = temp_prop_speed
+			eec_propspeed_pid[ind]["ff"] = 0.25 + ( temp_prop_speed * 0.005 * math.sin(math.rad(math.abs(temp_prop_pitch))) )
+			pid.run(eec_propspeed_pid[ind])
+			temp_eng_throttle = eec_propspeed_pid[ind]["cv"]
+			-- reset EEC frozen (as bellow 52 PLA)
+			eng_throttle_last[ind] = 0
 		end
+	elseif eng_throttle_last[ind] == 0 then
+		-- HMU base law (also for feather)
+		-- get requested engine NH for HMU base law
+		local eng_nh_ratio = curve.lookup(pla[ind], base_pla)
+		-- PID to set engine throttle to produce given NH
+		hmu_nhspeed_pid[ind]["cv"] = xdref["eng_throttle"][ind]
+		hmu_nhspeed_pid[ind]["pv"] = xdref["eng_nh"][ind]
+		hmu_nhspeed_pid[ind]["sp"] = eng_nh_ratio
+		--hmu_nhspeed_pid[ind]["ff"] = ( eng_nh_ratio - 70 ) * 30
+		pid.run(hmu_nhspeed_pid[ind])
+		temp_eng_throttle = hmu_nhspeed_pid[ind]["cv"]
+	else
+		-- EEC frozen
+		temp_eng_throttle = eng_throttle_last[ind]
 	end
 
 	-- start sequence
