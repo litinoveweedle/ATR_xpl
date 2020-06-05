@@ -149,20 +149,25 @@ local hmu_nhspeed_pid = {
 }
 -- controls NP by pitch at alpha
 local pvm_pitch_pid = {
-	[0] = { ["kp"] = -0.3, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 14, ["cv_max"] = 55, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 },
-	[1] = { ["kp"] = -0.3, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 14, ["cv_max"] = 55, ["cv_up"] = 10, ["cv_dw"] = 10, ["log"] = 0 }
+	[0] = { ["kp"] = -0.3, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 5, ["cv_max"] = 55, ["cv_up"] = 5, ["cv_dw"] = 5, ["log"] = 0 },
+	[1] = { ["kp"] = -0.3, ["ki"] = -0.35, ["kd"] = 0, ["ts"] = 0.1, ["cv_min"] = 5, ["cv_max"] = 55, ["cv_up"] = 5, ["cv_dw"] = 5, ["log"] = 0 }
 }
 -- controls NP by throttle at beta and reverse
 local eec_propspeed_pid = {
-	[0] = { ["kp"] = 0.015, ["ki"] = 0.0015, ["kd"] = 0.007, ["ts"] = 0.1, ["cv_min"] = 0.05, ["cv_max"] = 0.6, ["cv_up"] = 0.08, ["cv_dw"] = 0.08, ["log"] = 0 },
-	[1] = { ["kp"] = 0.015, ["ki"] = 0.0015, ["kd"] = 0.007, ["ts"] = 0.1, ["cv_min"] = 0.05, ["cv_max"] = 0.6, ["cv_up"] = 0.08, ["cv_dw"] = 0.08, ["log"] = 0 }
+	[0] = { ["kp"] = 0.015, ["ki"] = 0.002, ["kd"] = 0.015, ["ts"] = 0.1, ["cv_min"] = 0.05, ["cv_max"] = 0.6, ["cv_up"] = 0.08, ["cv_dw"] = 0.08, ["log"] = 0 },
+	[1] = { ["kp"] = 0.015, ["ki"] = 0.002, ["kd"] = 0.015, ["ts"] = 0.1, ["cv_min"] = 0.05, ["cv_max"] = 0.6, ["cv_up"] = 0.08, ["cv_dw"] = 0.08, ["log"] = 0 }
 }
--- limits prop pitch speed change
+-- limits prop pitch change rate
 local prop_pitch_gain = {
-	[0] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = -14, ["out_max"] = 78.5, ["out_up"] = 1, ["out_dw"] = 1, ["log"] = 0 },
-	[1] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = -14, ["out_max"] = 78.5, ["out_up"] = 1, ["out_dw"] = 1, ["log"] = 0 },
+	[0] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = -14, ["out_max"] = 55, ["out_up"] = 6, ["out_dw"] = 3, ["log"] = 0 },
+	[1] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = -14, ["out_max"] = 55, ["out_up"] = 6, ["out_dw"] = 3, ["log"] = 0 },
 }
--- limits repotred torque change
+-- limits prop speed change rate
+local prop_speed_gain = {
+	[0] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = 0, ["out_max"] = prop_speed_max, ["out_up"] = 5, ["out_dw"] = 5, ["log"] = 0 },
+	[1] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = 0, ["out_max"] = prop_speed_max, ["out_up"] = 5, ["out_dw"] = 5, ["log"] = 0 },
+}
+-- limits reported torque change
 local eng_tq_gain = {
 	[0] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = 0, ["out_max"] = 100, ["out_up"] = 10, ["out_dw"] = 10, ["log"] = 0 },
 	[1] = { ["k"] = 1, ["ts"] = 0.1, ["out_min"] = 0, ["out_max"] = 100, ["out_up"] = 10, ["out_dw"] = 10, ["log"] = 0 },
@@ -317,9 +322,14 @@ function eec(ind)
 		--PEC off
 		temp_prop_speed = prop_speed_max
 	end
+	--limit prop speed rate
+	prop_speed_gain[ind]["out"] = xdref["prop_speed"][ind]
+	prop_speed_gain[ind]["in"] = temp_prop_speed
+	gain.run(prop_speed_gain[ind])
+	temp_prop_speed = prop_speed_gain[ind]["out"]
 
 	--PVM
-	if cla[ind] < 1.7 and xdref["eng_power"][ind] < eng_power_max * 0.05 then
+	if pdref["power"]["fire_handle"][ind] == 1 or cla[ind] < 1.7 then
 		-- shutoff
 		temp_prop_mode = 0
 		temp_eng_mixture = 0
@@ -334,25 +344,27 @@ function eec(ind)
 	elseif xdref["prop_feather"][ind] == 1 and xdref["eng_power"][ind] < eng_power_max * 0.01 then
 		-- keep feathered
 		temp_prop_mode = 0
-		temp_eng_mixture = 1
+		temp_eng_mixture = 0.5
 		temp_prop_feather = 1
 		temp_prop_pitch = 78.5
-	elseif pla[ind] < 13 and xdref["eng_power"][ind] < eng_power_max * 0.075 then
+	elseif pla[ind] < 13 then
 		-- reverse
 		temp_prop_mode = 3
 		temp_eng_mixture = 1
 		temp_prop_feather = 0
-		prop_pitch_gain[ind]["in"] = prop_beta["reverse"] + ( ( math.abs(prop_beta["reverse"] - prop_beta["beta"]) / 13 ) * ( pla[ind] ) )
 		--limit prop pitch rate
+		prop_pitch_gain[ind]["out"] = xdref["prop_pitch"][ind]
+		prop_pitch_gain[ind]["in"] = prop_beta["reverse"] + ( ( math.abs(prop_beta["reverse"] - prop_beta["beta"]) / 13 ) * ( pla[ind] ) )
 		gain.run(prop_pitch_gain[ind])
 		temp_prop_pitch = prop_pitch_gain[ind]["out"]
-	elseif pla[ind] < 31 and xdref["eng_power"][ind] < eng_power_max * 0.15 then
+	elseif pla[ind] < 31 then
 		-- ground beta
 		temp_prop_mode = 2
 		temp_eng_mixture = 0.5
 		temp_prop_feather = 0
-		prop_pitch_gain[ind]["in"] = prop_beta["beta"] + ( ( math.abs(prop_beta["beta"] - prop_beta["alpha"]) / 18 ) * ( pla[ind] - 13 ) )
 		--limit prop pitch rate
+		prop_pitch_gain[ind]["out"] = xdref["prop_pitch"][ind]
+		prop_pitch_gain[ind]["in"] = prop_beta["beta"] + ( ( math.abs(prop_beta["beta"] - prop_beta["alpha"]) / 18 ) * ( pla[ind] - 13 ) )
 		gain.run(prop_pitch_gain[ind])
 		temp_prop_pitch = prop_pitch_gain[ind]["out"]
 	else
@@ -416,7 +428,7 @@ function eec(ind)
 		end
 
 		-- HMU top law power calculation
-		if xdref["eng_power"][ind] > eng_power_max * 0.01 and xdref["prop_feather"][ind] == 0 then
+		if temp_eng_mixture == 1 and temp_prop_feather == 0 then
 			eng_power_ratio = eec_limit(pla[ind], pwr_mgmt, pack_flow)
 		end
 	else
@@ -424,7 +436,10 @@ function eec(ind)
 		pdref["power"]["eec_fdau"][ind] = 0
 	end
 
-	if eng_power_ratio ~= 0 then
+	if temp_eng_mixture == 0 then
+		-- shutoff
+		temp_eng_throttle = 0
+	elseif eng_power_ratio ~= 0 then
 		-- HMU top law
 		-- get requested EEC engine power for HMU top law
 		eng_power = eng_power_ratio * eng_power_max
@@ -435,7 +450,7 @@ function eec(ind)
 			-- Fuel Governing mode - constant NP
 			pla_transfer[ind] = pla[ind]
 			mode = 1
-		elseif pla[ind] < 31 and xdref["eng_power"][ind] < eng_power_max * 0.15 then
+		elseif pla[ind] < 31 then
 			-- Blade Angle Governing mode - constant TQ
 			pla_transfer[ind] = pla[ind]
 			mode = 0
@@ -447,11 +462,11 @@ function eec(ind)
 			else
 				mode = 0
 				if pla[ind] < pla_transfer[ind] then
-					pla_transfer = pla[ind]
+					pla_transfer[ind] = pla[ind]
 				end
 			end
 		elseif eec_power_pid[ind]["t"] ~= nil and ( eec_propspeed_pid[ind]["t"] == nil or eec_power_pid[ind]["t"] > eec_propspeed_pid[ind]["t"] ) then
-			if pla[ind] < 52 and pla[ind] < pla_transfer[ind] and xdref["eng_power"][ind] < eng_power_max * 0.15 and temp_prop_pitch == prop_beta["alpha"] then
+			if pla[ind] < 52 and pla[ind] < pla_transfer[ind] and temp_prop_pitch < prop_beta["alpha"] then
 				-- transition to Fuel Governing mode - constant NP
 				pla_transfer[ind] = pla[ind]
 				mode = 0
@@ -523,7 +538,7 @@ function eec(ind)
 	end
 
 	-- ignition
-	if cla[ind] < 1.7 then
+	if temp_eng_mixture == 0 then
 		xdref["eng_igniter"][ind] = 0
 	elseif pdref["power"]["start_cmd"][ind] == 1 and pdref["power"]["start_sel"][0] > 1 then
 		-- starter inginition
