@@ -64,12 +64,13 @@ function init(var)
 		var["log"] = 0
 	end
 
-	if var["out_max"] ~= nil and var["in"] * var["k"] > var["out_max"] then
-		var["out"] = var["out_max"]
-	elseif var["out_min"] ~= nil and var["in"] * var["k"] < var["out_min"] then
-		var["out"] = var["out_min"]
-	else
+	if var["out"] == nil then
 		var["out"] = var["k"] * var["in"]
+	end
+	if var["out_max"] ~= nil and var["out"] > var["out_max"] then
+		var["out"] = var["out_max"]
+	elseif var["out_min"] ~= nil and var["out"] < var["out_min"] then
+		var["out"] = var["out_min"]
 	end
 	
 	if var["rc"] == nil and var["frq"] ~= nil and var["frq"] ~= 0 then
